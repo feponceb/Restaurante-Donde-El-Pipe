@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorMenuApplication<gestorMenu>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorMenu.GestorMenuApplication",
+            "projectName": "gestorMenu",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
