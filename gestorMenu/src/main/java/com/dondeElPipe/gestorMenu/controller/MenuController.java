@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dondeElPipe.gestorMenu.model.Menu;
 import com.dondeElPipe.gestorMenu.service.MenuService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/menu")
 public class MenuController {
@@ -34,7 +36,7 @@ public class MenuController {
     }
     //crear un plato
     @PostMapping("/nuevo-plato")
-    public Menu nuevoPlato(@RequestBody Menu menu){
+    public Menu nuevoPlato(@Valid @RequestBody Menu menu){
         return service.crearPlato(menu);
     }
     //eliminar un plato por id

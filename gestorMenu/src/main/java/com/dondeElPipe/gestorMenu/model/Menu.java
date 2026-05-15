@@ -44,7 +44,7 @@ public class Menu {
 
     //atributo tipo lista para comunicacion con inventario
     //nullable para testeos al crear objetos sin la comunicacion hecha
-    @ElementCollection
-    @Column(nullable = true)
-    private List<Integer> ingredientes;
+    //@ElementCollection
+    //@Column(nullable = true)
+    //private List<Integer> ingredientes;
 }

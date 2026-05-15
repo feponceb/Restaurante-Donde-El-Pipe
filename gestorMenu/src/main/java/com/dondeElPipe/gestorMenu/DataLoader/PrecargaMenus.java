@@ -14,9 +14,9 @@ public class PrecargaMenus {
     CommandLineRunner init(MenuRepository repo){
         return args -> {
             if (repo.count() == 0) {
-                repo.save(new Menu(null, "Cazuela", 8990.0, "Sopas", null));
-                repo.save(new Menu(null, "Completo Italiano", 4990.0, "Completo", null));
-                repo.save(new Menu(null, "Asado todas las carnes", 34990.0, "Asado", null));
+                repo.save(new Menu(null, "Cazuela", 8990.0, "Sopas"));
+                repo.save(new Menu(null, "Completo Italiano", 4990.0, "Completo"));
+                repo.save(new Menu(null, "Asado todas las carnes", 34990.0, "Asado"));
             }
         };
     }
