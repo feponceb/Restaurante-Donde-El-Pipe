@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,11 +35,18 @@ public class MenuController {
     public List<Menu> listar(){
         return service.listar();
     }
-    //crear un plato
+    
+    
+    //crear un plato Response
     @PostMapping("/nuevo-plato")
-    public Menu nuevoPlato(@Valid @RequestBody Menu menu){
-        return service.crearPlato(menu);
+    public ResponseEntity<Menu> nuevoPlato(@Valid @RequestBody Menu menu){
+
+        Menu nuevo = service.crearPlato(menu);
+
+        return ResponseEntity.status(201).body(nuevo);
     }
+    
+
     //eliminar un plato por id
     @DeleteMapping("/eliminar-plato/{id}")
     public String eliminarPlato(@PathVariable Integer id){
@@ -53,7 +61,7 @@ public class MenuController {
     }
     //actualizar un plato
     @PutMapping("/modificar-plato/{id}")
-    public String actualizarPlato(@PathVariable Integer id, @RequestBody Menu menu){
+    public String actualizarPlato(@Valid @PathVariable Integer id, @RequestBody Menu menu){
         Optional<Menu> existente = service.buscarId(id);
 
         if (existente.isPresent()) {
@@ -65,3 +73,11 @@ public class MenuController {
     }
 
 }
+//Versiones Antiguas
+/*
+    //crear un plato
+    @PostMapping("/nuevo-plato")
+    public Menu nuevoPlato(@Valid @RequestBody Menu menu){
+        return service.crearPlato(menu);
+    }
+    */

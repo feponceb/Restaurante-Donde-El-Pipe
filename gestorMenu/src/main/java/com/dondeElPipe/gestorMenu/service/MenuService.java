@@ -28,6 +28,7 @@ public class MenuService {
     public Menu crearPlato(Menu menu){
         return repo.save(menu);
     }
+
     //eliminar un plato por el id
     public void eliminarPlato(Integer id){
         repo.deleteById(id);
@@ -46,5 +47,10 @@ public class MenuService {
     public Optional<Menu> buscarId(Integer id){
         return repo.findById(id);
     }
-
+    /* 
+    //buscar por nombre
+    public Optional<Menu> findByName(String name){
+        return repo.findByNameIgnoreCase(name); 
+    }
+    */
 }
