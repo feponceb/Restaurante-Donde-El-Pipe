@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,12 +39,22 @@ public class MenuController {
     
     
     //crear un plato Response
+    //DETALLE
+    //no crear mismos nombres de platos
     @PostMapping("/nuevo-plato")
-    public ResponseEntity<Menu> nuevoPlato(@Valid @RequestBody Menu menu){
+    public ResponseEntity<?> nuevoPlato(@Valid @RequestBody Menu menu){
 
         Menu nuevo = service.crearPlato(menu);
 
-        return ResponseEntity.status(201).body(nuevo);
+        // Si el servicio detectó un duplicado y devolvió null
+        if (nuevo == null) {
+            // Respondemos con código 400 Bad Request y un mensaje de error claro
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body("Error: El nombre del plato '" + menu.getNombrePlato() + "' ya existe.");
+        }
+
+        // Si se creó correctamente, respondemos con código 201 Created y el objeto completo (con su ID)
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
     
 

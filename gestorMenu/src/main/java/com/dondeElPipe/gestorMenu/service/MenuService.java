@@ -26,7 +26,16 @@ public class MenuService {
     }
     //crear un plato
     public Menu crearPlato(Menu menu){
-        return repo.save(menu);
+        if (repo.existsByNombrePlato(menu.getNombrePlato())) {
+        return null;
+    }
+
+        Menu nuevoPlato = new Menu();
+        nuevoPlato.setNombrePlato(menu.getNombrePlato());
+        nuevoPlato.setPrecio(menu.getPrecio());
+        nuevoPlato.setCategoria(menu.getCategoria());
+
+        return repo.save(nuevoPlato);
     }
 
     //eliminar un plato por el id

@@ -26,7 +26,7 @@ public class Menu {
     private Integer id;
 
     @NotBlank(message = "Debe de tener un nombre")
-    @Column(nullable = false, length = 99)
+    @Column(nullable = false, length = 99, unique = true)
     private String nombrePlato;
 
     @NotNull(message = "Debe de tener un precio")
