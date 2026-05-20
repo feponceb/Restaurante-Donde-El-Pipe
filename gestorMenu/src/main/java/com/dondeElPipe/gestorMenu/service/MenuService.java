@@ -24,14 +24,18 @@ public class MenuService {
     public List<Menu> listar(){
         return repo.findAll();
     }
+    
     //crear un plato
     public Menu crearPlato(Menu menu){
-        if (repo.existsByNombrePlato(menu.getNombrePlato())) {
+
+        String nombreNormalizado = menu.getNombrePlato().trim().replaceAll("\\s+", " ");
+
+        if (repo.existsByNombrePlatoIgnoreCase(nombreNormalizado)) {
         return null;
     }
 
         Menu nuevoPlato = new Menu();
-        nuevoPlato.setNombrePlato(menu.getNombrePlato());
+        nuevoPlato.setNombrePlato(nombreNormalizado);
         nuevoPlato.setPrecio(menu.getPrecio());
         nuevoPlato.setCategoria(menu.getCategoria());
 

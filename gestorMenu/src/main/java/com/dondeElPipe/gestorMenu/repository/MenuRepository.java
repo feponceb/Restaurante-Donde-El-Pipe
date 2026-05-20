@@ -10,5 +10,5 @@ import com.dondeElPipe.gestorMenu.model.Menu;
 public interface MenuRepository extends JpaRepository<Menu, Integer>{
 
     //Para verificar nombres duplciados
-    boolean existsByNombrePlato(String nombrePlato);
+    boolean existsByNombrePlatoIgnoreCase(String nombrePlato);
 }

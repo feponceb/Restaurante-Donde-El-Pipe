@@ -33,8 +33,9 @@ public class MenuController {
     //--+----+----+----+----+----+----+----+----+----+----+--
     //buscar todo
     @GetMapping("/todo")
-    public List<Menu> listar(){
-        return service.listar();
+    public ResponseEntity<List<Menu>> listar() {
+        List<Menu> platos = service.listar();
+        return ResponseEntity.ok(platos); // Equivale a status(HttpStatus.OK).body(platos)
     }
     
     
@@ -60,26 +61,33 @@ public class MenuController {
 
     //eliminar un plato por id
     @DeleteMapping("/eliminar-plato/{id}")
-    public String eliminarPlato(@PathVariable Integer id){
+    public ResponseEntity<?> eliminarPlato(@PathVariable Integer id) {
         Optional<Menu> menu = service.buscarId(id);
 
         if (menu.isPresent()) {
             service.eliminarPlato(id);
-            return "Plato eliminado correctamente";
+            //codigo 200
+            return ResponseEntity.status(HttpStatus.OK)
+                                    .body("Plato ID " + id + " eliminado correctamente");
         } else {
-            return "El plato " +id+ " no fue encontrado";
+            //Codigo error 404
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                    .body("El plato " + id + " no fue encontrado");
         }
     }
+    
     //actualizar un plato
     @PutMapping("/modificar-plato/{id}")
-    public String actualizarPlato(@Valid @PathVariable Integer id, @RequestBody Menu menu){
+    public ResponseEntity<?> actualizarPlato(@Valid @PathVariable Integer id, @RequestBody Menu menu){
         Optional<Menu> existente = service.buscarId(id);
 
         if (existente.isPresent()) {
             service.actualizarMenu(id, menu);
-            return "Plato modificado correctamente";
+            return ResponseEntity.status(HttpStatus.OK)
+                                    .body("Plato modificado correctamente");
         } else {
-            return "El plato " +id+ " no fue encontrado";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                    .body("El plato " +id+ " no fue encontrado");
         }
     }
 
