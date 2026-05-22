@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "GestorUsuarioApplication",
+            "request": "launch",
+            "mainClass": "com.dondeElPipe.gestorUsuario.GestorUsuarioApplication",
+            "projectName": ""
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-GestorMenuApplication<gestorMenu>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
