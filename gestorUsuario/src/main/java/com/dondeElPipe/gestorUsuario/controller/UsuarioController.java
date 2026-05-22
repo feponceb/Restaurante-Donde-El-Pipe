@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dondeElPipe.gestorUsuario.DTO.UsuarioDTO;
 import com.dondeElPipe.gestorUsuario.model.Usuario;
 import com.dondeElPipe.gestorUsuario.service.UsuarioService;
 
@@ -32,6 +33,14 @@ public class UsuarioController {
     public ResponseEntity<List<Usuario>> listar() {
         List<Usuario> usuarios = service.listar();
         return ResponseEntity.ok(usuarios);
+    }
+
+    // Buscar todo en formato DTO
+    @GetMapping("/todoDTO")
+    public ResponseEntity<List<UsuarioDTO>> listarUsuarios() {
+        // Llama a tu función especial que mezcla los datos con el nombre del rol
+        List<UsuarioDTO> usuariosDTO = service.listarDTO();
+        return ResponseEntity.ok(usuariosDTO);
     }
 
     //crear un usuario Response
@@ -54,8 +63,7 @@ public class UsuarioController {
 
         if (usuario.isPresent()) {
             service.eliminarUsuario(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                .body("Usuario ID " + id + " eliminado correctamente");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body("El usuario " + id + " no fue encontrado");

@@ -8,4 +8,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     boolean existsByRutIgnoreCase(String rut);
 
+    boolean existsByEmailIgnoreCase(String email);
+
 }

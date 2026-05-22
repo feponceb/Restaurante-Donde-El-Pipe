@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,9 +37,9 @@ public class Usuario {
     private String apellido;
 
     // El rol define los accesos (ej: "ADMIN", "GARZON", "COCINA", "CAJERO")
-    @NotBlank(message = "Debe asignar un rol al usuario")
-    @Column(nullable = false, length = 30)
-    private String rol;
+    @NotNull(message = "Debe asignar un rol al usuario")
+    @Column(name = "rol_id",nullable = false)
+    private Integer rol;
 
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "Debe ingresar un email válido")

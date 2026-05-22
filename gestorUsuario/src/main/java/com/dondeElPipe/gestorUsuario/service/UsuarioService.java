@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.dondeElPipe.gestorUsuario.DTO.UsuarioDTO;
 import com.dondeElPipe.gestorUsuario.model.Usuario;
+import com.dondeElPipe.gestorUsuario.repository.RolRepository;
 import com.dondeElPipe.gestorUsuario.repository.UsuarioRepository;
 
 @Service
@@ -15,6 +17,9 @@ public class UsuarioService {
     //inyeción del repository
     @Autowired
     private UsuarioRepository repo;
+
+    @Autowired
+    private RolRepository rolRepo;
 
     //--+----+----+----+----+----+----+----+----+----+----+
     //--+----+----+----+--Crud básico--+----+----+----+----+----
@@ -27,20 +32,32 @@ public class UsuarioService {
 
     //crear un usuario
     public Usuario crearUsuario(Usuario usuario) {
-        
-        String rutLimpio = usuario.getRut().replace(".", "").replace("-", "").replaceAll("\\s+", "").toUpperCase();
 
+        String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "");
+        
         if (!validarRutMatematico(rutLimpio)) {
-            return null; 
+            return null; // El RUT es falso o inválido
         }
 
-        if (repo.existsByRutIgnoreCase(rutLimpio)) {
-            return null; 
+        // 1. Validar que el Rol seleccionado por ID exista
+        if (usuario.getRol() == null || !rolRepo.existsById(usuario.getRol())) {
+            return null;
         }
 
-        usuario.setRut(rutLimpio);
-        
-        return repo.save(usuario);
+        // 2. Validar duplicados de RUT o Email (asumiendo que tienes estos existsBy en tu repo)
+        if (repo.existsByRutIgnoreCase(usuario.getRut()) || repo.existsByEmailIgnoreCase(usuario.getEmail())) {
+            return null;
+        }
+
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setRut(usuario.getRut().trim());
+        nuevoUsuario.setNombre(usuario.getNombre().trim());
+        nuevoUsuario.setApellido(usuario.getApellido().trim());
+        nuevoUsuario.setEmail(usuario.getEmail().trim().toLowerCase());
+        nuevoUsuario.setPassword(usuario.getPassword()); // En producción aquí iría encriptado
+        nuevoUsuario.setRol(usuario.getRol());
+
+        return repo.save(nuevoUsuario);
     }
 
 
@@ -51,6 +68,17 @@ public class UsuarioService {
 
     //modificar un usuario
     public Usuario actualizarUsuario(Integer id, Usuario usuario){
+        // 1. Limpiamos y validamos el RUT también al modificar
+        String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "");
+        
+        if (!validarRutMatematico(rutLimpio)) {
+            return null; // Frena la actualización si inventaron un RUT
+        }
+
+        // 2. Si el rol que intentan asignar no existe, no dejamos guardar
+        if (usuario.getRol() == null || !rolRepo.existsById(usuario.getRol())) {
+            return null;
+        }
         usuario.setId(id);
         return repo.save(usuario);
     }
@@ -107,6 +135,25 @@ public class UsuarioService {
         } catch (NumberFormatException e) {
             return false; // Retorna falso si el cuerpo contiene caracteres inválidos que no sean números
         }
+    }
+
+    // Listar todo mapeado a DTO
+    public List<UsuarioDTO> listarDTO() {
+        List<Usuario> usuarios = repo.findAll();
+
+        return usuarios.stream().map(u -> {
+            String nombreRol = rolRepo.findById(u.getRol())
+                                      .map(r -> r.getNombre())
+                                      .orElse("SIN ROL");
+
+            return new UsuarioDTO(
+                u.getRut(),
+                u.getNombre(),
+                u.getApellido(),
+                u.getEmail(),
+                nombreRol
+            );
+        }).toList();
     }
 
 }
