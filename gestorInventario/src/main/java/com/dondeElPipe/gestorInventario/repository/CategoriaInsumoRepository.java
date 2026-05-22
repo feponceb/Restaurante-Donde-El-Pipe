@@ -7,6 +7,7 @@ import com.dondeElPipe.gestorInventario.model.CategoriaInsumo;
 
 @Repository
 public interface CategoriaInsumoRepository extends JpaRepository<CategoriaInsumo, Integer>{
-
+    
+    boolean existsByNombreIgnoreCase(String nombre);
 
 }

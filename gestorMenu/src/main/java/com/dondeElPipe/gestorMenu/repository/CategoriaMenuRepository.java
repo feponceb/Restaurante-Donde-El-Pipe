@@ -6,4 +6,5 @@ import com.dondeElPipe.gestorMenu.model.CategoriaMenu;
 
 public interface CategoriaMenuRepository extends JpaRepository<CategoriaMenu, Integer>{
 
+    boolean existsByNombreIgnoreCase(String nombre);
 }

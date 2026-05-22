@@ -22,7 +22,7 @@ import com.dondeElPipe.gestorMenu.service.MenuService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/menu")
+@RequestMapping("/menu/platillos")
 public class MenuController {
 
     //inyeccion de service
