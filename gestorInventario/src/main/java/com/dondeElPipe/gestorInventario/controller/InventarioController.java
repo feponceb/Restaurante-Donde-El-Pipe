@@ -15,13 +15,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dondeElPipe.gestorInventario.DTO.InventarioDTO;
 import com.dondeElPipe.gestorInventario.model.Inventario;
 import com.dondeElPipe.gestorInventario.service.InventarioService;
 
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/inventario")
+@RequestMapping("/inventario/insumos")
 public class InventarioController {
 
     //inyeccion de service
@@ -36,6 +37,14 @@ public class InventarioController {
     @GetMapping("/todo")
     public ResponseEntity<List<Inventario>> listar() {
         List<Inventario> inventarios = service.listar();
+        return ResponseEntity.ok(inventarios);
+    }
+
+    // buscar todo en formato DTO
+    @GetMapping("/todoDTO")
+    public ResponseEntity<List<InventarioDTO>> listarDTO() {
+        // El service internamente ya se encarga de transformar las entidades a DTOs
+        List<InventarioDTO> inventarios = service.listarDTO();
         return ResponseEntity.ok(inventarios);
     }
     

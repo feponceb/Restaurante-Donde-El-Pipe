@@ -40,9 +40,8 @@ public class Inventario {
     @Column(nullable = false, length = 20)
     private String unidadMedida;
 
-    // Categoría para separar comestibles de bebestibles (ej: "Carnes", "Líquidos", "Verduras")
-    @NotBlank(message = "Debe asignar una categoría al insumo")
-    @Column(nullable = false, length = 55)
-    private String categoria;
+    @NotNull(message = "Debe ingresar el ID de la categoría")
+    @Column(name = "categoria_id", nullable = false) 
+    private Integer categoria;
 
 }
