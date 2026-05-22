@@ -15,6 +15,27 @@
             "mainClass": "com.dondeElPipe.gestorMenu.GestorMenuApplication",
             "projectName": "gestorMenu",
             "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorInventarioApplication<gestorInventario>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorInventario.GestorInventarioApplication",
+            "projectName": "gestorInventario",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorUsuarioApplication<gestorUsuario>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorUsuario.GestorUsuarioApplication",
+            "projectName": "gestorUsuario",
+            "args": "",
             "envFile": "${workspaceFolder}/.env"
         }
     ]

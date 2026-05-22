@@ -25,8 +25,9 @@ public class InventarioService {
     }
 
     //crear insumo
+    
     public Inventario crearInsumo(Inventario insumo){
-        if (repo.existsByNombreInsumoSinEspacios(insumo.getNombreInsumo())) {
+        if (repo.existsByNombreInsumoIgnoreCase(insumo.getNombreInsumo())) {
             return null; // Duplicado detectado
         }
 
@@ -39,7 +40,7 @@ public class InventarioService {
 
         return repo.save(nuevoInsumo);
     }
-
+    
     //delete insumo
     public void eliminarInsumo(Integer id){
         repo.deleteById(id);
