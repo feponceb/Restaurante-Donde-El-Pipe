@@ -36,13 +36,8 @@ public class Menu {
 
     //Deberia tener una tabla externa donde se puedan crear las categorias
     //y ser llamadas como ingredientes
-    @NotBlank(message = "Debe de tener una categoría")
-    @Column(nullable = false, length = 55)
-    private String categoria;
+    @NotNull(message = "Debe de tener una categoría")
+    @Column(nullable = false, name = "categoria_id")
+    private Integer categoria;
 
-    //atributo tipo lista para comunicacion con inventario
-    //nullable para testeos al crear objetos sin la comunicacion hecha
-    //@ElementCollection
-    //@Column(nullable = true)
-    //private List<Integer> ingredientes;
 }

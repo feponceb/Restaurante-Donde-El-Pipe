@@ -1,4 +1,4 @@
-package com.dondeElPipe.gestorInventario.DTO;
+package com.dondeElPipe.gestorMenu.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,11 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class InventarioDTO {
+public class MenuDTO {
 
-    private String nombreInsumo;
-    private Double stockActual;
-    private String unidadMedida;
+    private String nombrePlato;
+    private Double precio;
     private String nombreCategoria;
 
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dondeElPipe.gestorMenu.DTO.MenuDTO;
 import com.dondeElPipe.gestorMenu.model.Menu;
 import com.dondeElPipe.gestorMenu.service.MenuService;
 
@@ -36,6 +37,14 @@ public class MenuController {
     public ResponseEntity<List<Menu>> listar() {
         List<Menu> platos = service.listar();
         return ResponseEntity.ok(platos); // Equivale a status(HttpStatus.OK).body(platos)
+    }
+
+    // buscar todo en formato DTO
+    @GetMapping("/todoDTO")
+    public ResponseEntity<List<MenuDTO>> listarDTO() {
+        // El service internamente ya se encarga de transformar las entidades a DTOs
+        List<MenuDTO> menu = service.listarDTO();
+        return ResponseEntity.ok(menu);
     }
     
     
@@ -67,8 +76,7 @@ public class MenuController {
         if (menu.isPresent()) {
             service.eliminarPlato(id);
             //codigo 200
-            return ResponseEntity.status(HttpStatus.OK)
-                                    .body("Plato ID " + id + " eliminado correctamente");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();                                   
         } else {
             //Codigo error 404
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

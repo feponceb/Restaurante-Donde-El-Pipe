@@ -70,8 +70,7 @@ public class InventarioController {
 
         if (inventario.isPresent()) {
             service.eliminarInsumo(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                                    .body("Inventario ID " + id + " eliminado correctamente");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                     .body("El inventario " + id + " no fue encontrado");

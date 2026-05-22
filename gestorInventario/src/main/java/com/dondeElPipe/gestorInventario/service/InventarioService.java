@@ -92,7 +92,6 @@ public class InventarioService {
 
         // 3. Armar y retornar el DTO armado con los datos mezclados
         return new InventarioDTO(
-            insumo.getId(),
             insumo.getNombreInsumo(),
             insumo.getStockActual(),
             insumo.getUnidadMedida(),
@@ -115,7 +114,6 @@ public class InventarioService {
 
             // Construimos el DTO con el constructor AllArgsConstructor
             return new InventarioDTO(
-                insumo.getId(),
                 insumo.getNombreInsumo(),
                 insumo.getStockActual(),
                 insumo.getUnidadMedida(),
