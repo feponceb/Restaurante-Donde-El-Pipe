@@ -39,7 +39,7 @@ public class InventarioController {
         return ResponseEntity.ok(inventarios);
     }
     
-    //--+----+----+----+--Crear un plato--+----+----+----+----+--
+    //--+----+----+----+--Crear un insumo--+----+----+----+----+--
     //crear un inventario Response
     @PostMapping("/nuevo-insumo")
     public ResponseEntity<?> nuevoInventario(@Valid @RequestBody Inventario inventario) {
@@ -53,7 +53,7 @@ public class InventarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
     
-    //--+----+----+----+--Eliminar un plato--+----+----+----+----+--
+    //--+----+----+----+--Eliminar un insumo--+----+----+----+----+--
     //eliminar un inventario por id
     @DeleteMapping("/eliminar-insumo/{id}")
     public ResponseEntity<?> eliminarInventario(@PathVariable Integer id) {
@@ -69,7 +69,7 @@ public class InventarioController {
         }
     }
 
-    //--+----+----+----+--Actualizar un plato--+----+----+----+----+--
+    //--+----+----+----+--Actualizar un insumo--+----+----+----+----+--
     //actualizar un inventario
     @PutMapping("/modificar-insumo/{id}")
     public ResponseEntity<?> actualizarInventario(@Valid @PathVariable Integer id, @RequestBody Inventario inventario) {
