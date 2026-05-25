@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.dondeElPipe.gestorPedidos.DTO.DetallePedidoDTO;
 import com.dondeElPipe.gestorPedidos.DTO.MesaReservaDTO;
+import com.dondeElPipe.gestorPedidos.DTO.PedidoLegibleDTO;
 import com.dondeElPipe.gestorPedidos.DTO.PlatoMenuDTO;
 import com.dondeElPipe.gestorPedidos.model.DetallePedido;
 import com.dondeElPipe.gestorPedidos.model.EstadoPedido;
@@ -90,5 +92,41 @@ public class PedidoService {
     public Optional<Pedido> buscarPorId(Integer id) {
         return pedidoRepo.findById(id);
     }
+
+    public PedidoLegibleDTO convertirALegible(Pedido pedido) {
+        PedidoLegibleDTO dto = new PedidoLegibleDTO();
+        dto.setIdPedido(pedido.getId());
+        dto.setNumeroMesa(pedido.getMesaId());
+        dto.setTipoPedido(pedido.getTipoPedido());
+        dto.setUsuarioId(pedido.getUsuarioId());
+        dto.setTotalPagar(pedido.getTotal());
+        dto.setEstado(pedido.getEstado());
+        dto.setFechaCreacion(pedido.getFechaCreacion());
+            
+        // Mapeamos los detalles rústicos a detalles legibles con nombres de platos
+        List<DetallePedidoDTO> detallesLegibles = pedido.getDetalles().stream().map(detalle -> {
+            DetallePedidoDTO detalleDto = new DetallePedidoDTO();
+            detalleDto.setCantidad(detalle.getCantidad());
+            detalleDto.setSubtotal(detalle.getSubtotal());
+            
+            // Consultamos al gestorMenu usando el platoId para traer su nombre real
+            String urlMenu = "http://localhost:8080/menu/platillos/buscar/" + detalle.getPlatoId();
+            try {
+                PlatoMenuDTO plato = restTemplate.getForObject(urlMenu, PlatoMenuDTO.class);
+                if (plato != null) {
+                    detalleDto.setNombrePlato(plato.getNombrePlato()); // 👈 ¡Inyectamos el nombre!
+                } else {
+                    detalleDto.setNombrePlato("Plato Desconocido (ID: " + detalle.getPlatoId() + ")");
+                }
+            } catch (Exception e) {
+                detalleDto.setNombrePlato("Error al cargar nombre (ID: " + detalle.getPlatoId() + ")");
+            }
+            
+            return detalleDto;
+        }).toList();
+        
+        dto.setPlatosPedidos(detallesLegibles);
+        return dto;
+        }
 
 }
