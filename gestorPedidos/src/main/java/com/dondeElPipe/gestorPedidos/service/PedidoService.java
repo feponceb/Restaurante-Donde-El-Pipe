@@ -7,14 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.dondeElPipe.gestorPedidos.DTO.MesaReservaDTO;
 import com.dondeElPipe.gestorPedidos.DTO.PlatoMenuDTO;
 import com.dondeElPipe.gestorPedidos.model.DetallePedido;
-import com.dondeElPipe.gestorPedidos.model.EstadoMesa;
 import com.dondeElPipe.gestorPedidos.model.EstadoPedido;
-import com.dondeElPipe.gestorPedidos.model.Mesa;
 import com.dondeElPipe.gestorPedidos.model.Pedido;
 import com.dondeElPipe.gestorPedidos.model.TipoPedido;
-import com.dondeElPipe.gestorPedidos.repository.MesaRepository;
 import com.dondeElPipe.gestorPedidos.repository.PedidoRepository;
 
 import jakarta.transaction.Transactional;
@@ -26,63 +24,56 @@ public class PedidoService {
     private PedidoRepository pedidoRepo;
 
     @Autowired
-    private MesaRepository mesaRepo;
-
-    @Autowired
     private RestTemplate restTemplate;
 
     @Transactional
     public Pedido crearPedido(Pedido pedido) {
         
-        // 1. VALIDACIÓN DE LA MESA (Misma lógica estricta de antes)
+        // 1. VALIDACIÓN DE LA MESA CONTRA GESTOR_RESERVA (Solo si es Local)
         if (pedido.getTipoPedido() == TipoPedido.Local) {
             if (pedido.getMesaId() == null) return null;
-            
-            Optional<Mesa> mesaOpt = mesaRepo.findById(pedido.getMesaId());
-            if (mesaOpt.isEmpty()) return null;
 
-            Mesa mesa = mesaOpt.get();
-            if (mesa.getEstado() != EstadoMesa.Habilitada) return null;
+            // URL para consultar al microservicio de Reservas
+            String urlReserva = "http://localhost:8084/reserva/mesas/buscar/" + pedido.getMesaId();
 
-            mesa.setEstado(EstadoMesa.Ocupada);
-            mesaRepo.save(mesa);
+            try {
+                MesaReservaDTO mesaReal = restTemplate.getForObject(urlReserva, MesaReservaDTO.class);
+
+                // Validamos estrictamente si la mesa existe y si está "Habilitada" en el otro sistema
+                if (mesaReal == null || !mesaReal.getEstado().equalsIgnoreCase("Habilitada")) {
+                    System.out.println("La mesa no está disponible en gestorReserva.");
+                    return null; 
+                }
+
+                // OPCIONAL: Podríamos hacer un restTemplate.put() aquí para avisarle 
+                // al gestorReserva que cambie la mesa a "Ocupada", si tu diseño lo requiere.
+
+            } catch (Exception e) {
+                System.out.println("Error al conectar con gestorReserva: " + e.getMessage());
+                return null;
+            }
         } else {
             pedido.setMesaId(null);
         }
 
-        // 2. VALIDACIÓN DE DETALLES
-        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
-            return null;
-        }
+        // 2. VALIDACIÓN DE DETALLES Y PRECIOS CONTRA GESTOR_MENU (Lo que ya tenías impecable)
+        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) return null;
 
-        // 3. COMUNICACIÓN REAL ENTRE SERVICIOS Y CÁLCULO DE VALORES
         double totalGeneral = 0.0;
-
         for (DetallePedido detalle : pedido.getDetalles()) {
             detalle.setPedido(pedido);
 
-            // URL ejemplo: http://localhost:8080/menu/buscar/1
             String urlMenu = "http://localhost:8080/menu/platillos/buscar/" + detalle.getPlatoId();
-            
             try {
-                // Hacemos el GET y Spring mapea automáticamente el JSON recibido en nuestro DTO
                 PlatoMenuDTO platoReal = restTemplate.getForObject(urlMenu, PlatoMenuDTO.class);
-                
-                if (platoReal == null || platoReal.getPrecio() == null) {
-                    return null; // El plato no existe en el menú o no tiene precio
-                }
+                if (platoReal == null || platoReal.getPrecio() == null) return null;
 
-                // Extraemos el precio real directo desde el DTO del otro microservicio
-                double precioReal = platoReal.getPrecio();
-
-                double subtotalCalculado = precioReal * detalle.getCantidad();
+                double subtotalCalculado = platoReal.getPrecio() * detalle.getCantidad();
                 detalle.setSubtotal(subtotalCalculado);
                 totalGeneral += subtotalCalculado;
-
             } catch (Exception e) {
-                // Si el gestorMenu está apagado o la URL falla, atrapamos el error para que no se caiga el sistema
-                System.out.println("Error de comunicación con gestorMenu: " + e.getMessage());
-                return null; 
+                System.out.println("Error con gestorMenu: " + e.getMessage());
+                return null;
             }
         }
 
@@ -90,7 +81,7 @@ public class PedidoService {
         pedido.setEstado(EstadoPedido.Pendiente);
 
         return pedidoRepo.save(pedido);
-    }
+        }
 
     public List<Pedido> listarTodos() {
         return pedidoRepo.findAll();
