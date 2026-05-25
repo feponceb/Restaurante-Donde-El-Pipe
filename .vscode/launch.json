@@ -37,6 +37,16 @@
             "projectName": "gestorUsuario",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorPedidosApplication<gestorPedidos>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorPedidos.GestorPedidosApplication",
+            "projectName": "gestorPedidos",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

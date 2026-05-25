@@ -99,12 +99,16 @@ public class MenuController {
         }
     }
 
-}
-//Versiones Antiguas
-/*
-    //crear un plato
-    @PostMapping("/nuevo-plato")
-    public Menu nuevoPlato(@Valid @RequestBody Menu menu){
-        return service.crearPlato(menu);
+    @GetMapping("/buscar/{id}")
+    public ResponseEntity<?> obtenerPlatoPorId(@PathVariable Integer id) {
+        Optional<Menu> plato = service.buscarId(id);
+        
+        if (plato.isPresent()) {
+            return ResponseEntity.ok(plato.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Plato no encontrado");
+        }
     }
-    */
+
+}
+
