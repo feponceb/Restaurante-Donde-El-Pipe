@@ -47,6 +47,16 @@
             "projectName": "gestorPedidos",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorReservaApplication<gestorReserva>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorReserva.GestorReservaApplication",
+            "projectName": "gestorReserva",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
