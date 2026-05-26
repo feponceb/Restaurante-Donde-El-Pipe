@@ -34,30 +34,31 @@ public class UsuarioService {
     public Usuario crearUsuario(Usuario usuario) {
 
         String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "");
-        
+    
+        // 1. Validar RUT Matemático
         if (!validarRutMatematico(rutLimpio)) {
-            return null; // El RUT es falso o inválido
+            throw new IllegalArgumentException("El RUT ingresado no es válido matemáticamente.");
         }
 
-        // 1. Validar que el Rol seleccionado por ID exista
+        // 2. Validar que el Rol Exista
         if (usuario.getRol() == null || !rolRepo.existsById(usuario.getRol())) {
-            return null;
+            throw new IllegalArgumentException("El ID de Rol asignado no existe en el sistema.");
         }
 
-        // 2. Validar duplicados de RUT o Email (asumiendo que tienes estos existsBy en tu repo)
-        if (repo.existsByRutIgnoreCase(usuario.getRut()) || repo.existsByEmailIgnoreCase(usuario.getEmail())) {
-            return null;
+        // 3. CONDICIONALES DE NEGOCIO: Validamos duplicados manualmente antes de guardar
+        if (repo.existsByRutIgnoreCase(usuario.getRut().trim())) {
+            throw new IllegalArgumentException("El RUT ya está registrado");
         }
 
-        Usuario nuevoUsuario = new Usuario();
-        nuevoUsuario.setRut(usuario.getRut().trim());
-        nuevoUsuario.setNombre(usuario.getNombre().trim());
-        nuevoUsuario.setApellido(usuario.getApellido().trim());
-        nuevoUsuario.setEmail(usuario.getEmail().trim().toLowerCase());
-        nuevoUsuario.setPassword(usuario.getPassword()); // En producción aquí iría encriptado
-        nuevoUsuario.setRol(usuario.getRol());
+        if (repo.existsByEmailIgnoreCase(usuario.getEmail().trim())) {
+            throw new IllegalArgumentException("El email ya está registrado");
+        }
 
-        return repo.save(nuevoUsuario);
+        // Si pasa todos los filtros, persistimos el objeto sanitizado
+        usuario.setRut(usuario.getRut().trim());
+        usuario.setEmail(usuario.getEmail().trim().toLowerCase());
+
+        return repo.save(usuario);
     }
 
 

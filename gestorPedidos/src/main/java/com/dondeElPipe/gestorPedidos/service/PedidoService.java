@@ -11,6 +11,7 @@ import com.dondeElPipe.gestorPedidos.DTO.DetallePedidoDTO;
 import com.dondeElPipe.gestorPedidos.DTO.MesaReservaDTO;
 import com.dondeElPipe.gestorPedidos.DTO.PedidoLegibleDTO;
 import com.dondeElPipe.gestorPedidos.DTO.PlatoMenuDTO;
+import com.dondeElPipe.gestorPedidos.DTO.UsuarioDTO;
 import com.dondeElPipe.gestorPedidos.model.DetallePedido;
 import com.dondeElPipe.gestorPedidos.model.EstadoPedido;
 import com.dondeElPipe.gestorPedidos.model.Pedido;
@@ -98,35 +99,48 @@ public class PedidoService {
         dto.setIdPedido(pedido.getId());
         dto.setNumeroMesa(pedido.getMesaId());
         dto.setTipoPedido(pedido.getTipoPedido());
-        dto.setUsuarioId(pedido.getUsuarioId());
         dto.setTotalPagar(pedido.getTotal());
         dto.setEstado(pedido.getEstado());
         dto.setFechaCreacion(pedido.getFechaCreacion());
-            
-        // Mapeamos los detalles rústicos a detalles legibles con nombres de platos
+
+        // Supongamos que el microservicio de usuarios corre en el puerto 8081
+        String urlUsuario = "http://localhost:8082/usuarios/buscar/" + pedido.getUsuarioId();
+        try {
+            UsuarioDTO usuarioReal = restTemplate.getForObject(urlUsuario, UsuarioDTO.class);
+            if (usuarioReal != null) {
+                // Unimos nombre y apellido en un solo String para el DTO final
+                dto.setNombreGarzon(usuarioReal.getNombre() + " " + usuarioReal.getApellido());
+            } else {
+                dto.setNombreGarzon("Garzón Desconocido (ID: " + pedido.getUsuarioId() + ")");
+            }
+        } catch (Exception e) {
+            // Por ahora, mientras no tengas el MS Usuarios corriendo, entrará siempre aquí
+            // Esto evita que tu código falle o se caiga en el testeo, mostrando un texto limpio.
+            dto.setNombreGarzon("Garzón ID: " + pedido.getUsuarioId() + " (MS Usuarios Offline)");
+        }
+
+        // El mapeo de los platos queda exactamente igual como ya lo tenías impecable:
         List<DetallePedidoDTO> detallesLegibles = pedido.getDetalles().stream().map(detalle -> {
             DetallePedidoDTO detalleDto = new DetallePedidoDTO();
             detalleDto.setCantidad(detalle.getCantidad());
             detalleDto.setSubtotal(detalle.getSubtotal());
-            
-            // Consultamos al gestorMenu usando el platoId para traer su nombre real
+
             String urlMenu = "http://localhost:8080/menu/platillos/buscar/" + detalle.getPlatoId();
             try {
                 PlatoMenuDTO plato = restTemplate.getForObject(urlMenu, PlatoMenuDTO.class);
                 if (plato != null) {
-                    detalleDto.setNombrePlato(plato.getNombrePlato()); // 👈 ¡Inyectamos el nombre!
+                    detalleDto.setNombrePlato(plato.getNombrePlato());
                 } else {
                     detalleDto.setNombrePlato("Plato Desconocido (ID: " + detalle.getPlatoId() + ")");
                 }
             } catch (Exception e) {
                 detalleDto.setNombrePlato("Error al cargar nombre (ID: " + detalle.getPlatoId() + ")");
             }
-            
             return detalleDto;
         }).toList();
-        
+
         dto.setPlatosPedidos(detallesLegibles);
         return dto;
-        }
+    }
 
 }

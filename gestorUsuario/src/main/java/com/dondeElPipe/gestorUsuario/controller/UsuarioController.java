@@ -47,11 +47,7 @@ public class UsuarioController {
     @PostMapping("/nuevo-usuario")
     public ResponseEntity<?> nuevoUsuario(@Valid @RequestBody Usuario usuario) {
         Usuario nuevo = service.crearUsuario(usuario);
-
-        if (nuevo == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Error: El nombre del usuario '" + usuario.getNombre() + "' ya existe.");
-        }
+        
 
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
@@ -82,6 +78,18 @@ public class UsuarioController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body("El usuario " + id + " no fue encontrado");
+        }
+    }
+
+    @GetMapping("/buscar/{id}")
+    public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable Integer id) {
+        Optional<Usuario> usuarioOpt = service.buscarId(id); // Usa el método de tu Service
+        
+        if (usuarioOpt.isPresent()) {
+            return ResponseEntity.ok(usuarioOpt.get()); // Retorna el usuario completo (200 OK)
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Usuario con ID " + id + " no encontrado.");
         }
     }
 

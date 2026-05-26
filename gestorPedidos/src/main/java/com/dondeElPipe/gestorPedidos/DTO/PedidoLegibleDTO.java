@@ -14,7 +14,7 @@ public class PedidoLegibleDTO {
     private Integer idPedido;
     private Integer numeroMesa;    // Si es null, el Chef sabe que es Delivery
     private TipoPedido tipoPedido;
-    private Integer usuarioId;    
+    private String nombreGarzon;    
     private Double totalPagar;
     private EstadoPedido estado;
     private LocalDateTime fechaCreacion;
