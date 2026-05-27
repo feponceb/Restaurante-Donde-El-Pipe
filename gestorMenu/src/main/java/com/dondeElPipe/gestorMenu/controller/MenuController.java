@@ -3,7 +3,6 @@ package com.dondeElPipe.gestorMenu.controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,8 +25,11 @@ import jakarta.validation.Valid;
 public class MenuController {
 
     //inyeccion de service
-    @Autowired
-    private MenuService service;
+    private final MenuService service;
+
+    public MenuController(MenuService service) {
+        this.service = service;
+    }
     
     //--+----+----+----+----+----+----+----+----+----+----+--
     //--+----+----+----+--Metodos Crud--+----+----+----+----+--
@@ -43,7 +45,7 @@ public class MenuController {
     @GetMapping("/todoDTO")
     public ResponseEntity<List<MenuDTO>> listarDTO() {
         // El service internamente ya se encarga de transformar las entidades a DTOs
-        List<MenuDTO> menu = service.listarDTO();
+        List<MenuDTO> menu = service.listarTodoElMenu();
         return ResponseEntity.ok(menu);
     }
     

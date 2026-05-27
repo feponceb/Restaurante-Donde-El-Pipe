@@ -1,9 +1,9 @@
 package com.dondeElPipe.gestorMenu.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dondeElPipe.gestorMenu.DTO.MenuDTO;
@@ -15,11 +15,15 @@ import com.dondeElPipe.gestorMenu.repository.MenuRepository;
 public class MenuService {
 
     //inyeción del repository
-    @Autowired
-    private MenuRepository repo;
+    private final MenuRepository repo;
+    private final CategoriaMenuRepository catRepo;
 
-    @Autowired
-    private CategoriaMenuRepository catRepo;
+    public MenuService(MenuRepository repo, CategoriaMenuRepository catRepo){
+        this.repo = repo;
+        this.catRepo = catRepo;
+    }
+
+    
 
     //--+----+----+----+----+----+----+----+----+----+----+--
     //--+----+----+----+--Crud básico--+----+----+----+----+--
@@ -75,30 +79,29 @@ public class MenuService {
         return repo.findById(id);
     }
     
-    // Listar todo mapeado a DTO
-    public List<MenuDTO> listarDTO() {
+    public List<MenuDTO> listarTodoElMenu() {
         List<Menu> platos = repo.findAll();
+        List<MenuDTO> listaDto = new ArrayList<>();
+        
+        for (Menu m : platos) {
+            listaDto.add(convertirADto(m));
+        }
+        return listaDto;
+    }
 
-        return platos.stream().map(plato -> {
-            String nombreCat = (plato.getCategoria() != null)
-                                      ? plato.getCategoria().getNombre()
-                                      :"SIN CATEGORIA";
+    public Optional<MenuDTO> buscarPorId(Integer id) {
+        return repo.findById(id).map(this::convertirADto);
+    }
 
-            // 2. Extraer los nombres de la lista de ingredientes asociados al plato
-            List<String> nombresIngredientes = (plato.getIngredientes() != null)
-                ? plato.getIngredientes().stream()
-                                     .map(ingrediente -> ingrediente.getNombre())
-                                     .toList()
-                : List.of(); // Lista vacía si no tiene ingredientes
-
-            // 3. Retornar el DTO con la nueva estructura
-            return new MenuDTO(
-                plato.getNombrePlato(),
-                plato.getPrecio(),
-                nombreCat,
-                nombresIngredientes
-            );
-        }).toList();
+    private MenuDTO convertirADto(Menu menu) {
+        MenuDTO dto = new MenuDTO();
+        dto.setNombrePlato(menu.getNombrePlato());
+        dto.setPrecio(menu.getPrecio());
+        // Evitamos NullPointerException si por alguna razón el plato no tiene categoría asignada
+        if (menu.getCategoria() != null) {
+            dto.setNombreCategoria(menu.getCategoria().getNombre());
+        }
+        return dto;
     }
 
 }

@@ -3,7 +3,6 @@ package com.dondeElPipe.gestorMenu.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dondeElPipe.gestorMenu.model.CategoriaMenu;
@@ -12,8 +11,11 @@ import com.dondeElPipe.gestorMenu.repository.CategoriaMenuRepository;
 @Service
 public class CategoriaService {
 
-    @Autowired
-    private CategoriaMenuRepository repo;
+    private final CategoriaMenuRepository repo;
+
+    public CategoriaService(CategoriaMenuRepository repo) {
+        this.repo = repo;
+    }
 
     //--+----+----+----+----+----+----+----+----+----+----+--
     //--+----+----+----+--Crud básico--+----+----+----+----+--
