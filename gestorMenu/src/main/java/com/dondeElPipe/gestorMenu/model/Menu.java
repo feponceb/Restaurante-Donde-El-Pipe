@@ -1,11 +1,17 @@
 package com.dondeElPipe.gestorMenu.model;
 
 
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -36,8 +42,17 @@ public class Menu {
 
     //Deberia tener una tabla externa donde se puedan crear las categorias
     //y ser llamadas como ingredientes
+    @ManyToOne
+    @JoinColumn(name = "categoria_id", nullable = false)
     @NotNull(message = "Debe de tener una categoría")
-    @Column(nullable = false, name = "categoria_id")
-    private Integer categoria;
+    private CategoriaMenu categoria;
+
+    @ManyToMany
+    @JoinTable(
+        name = "menu_ingrediente",
+        joinColumns = @JoinColumn(name = "menu_id"),
+        inverseJoinColumns = @JoinColumn(name = "ingrediente_id")
+    )
+    private List<Ingrediente> ingredientes;
 
 }

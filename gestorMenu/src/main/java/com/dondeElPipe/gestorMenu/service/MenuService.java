@@ -33,14 +33,19 @@ public class MenuService {
     //crear un plato
     public Menu crearPlato(Menu menu) {
         // 1. Validar que la categoría seleccionada por ID exista
-        if (menu.getCategoria() == null || !catRepo.existsById(menu.getCategoria())) {
+        if (menu.getCategoria() == null || menu.getCategoria().getId() == null) {
+            return null; 
+        }
+
+        // Verificamos en el repositorio de categorías si el ID realmente existe
+        if (!catRepo.existsById(menu.getCategoria().getId())) {
             return null;
         }
 
-        // 2. Limpiar espacios intermedios y validar duplicado de nombre
+        // 2. Limpiar espacios intermedios y validar duplicado de nombre del plato
         String nombreLimpio = menu.getNombrePlato().trim().replaceAll("\\s+", " ");
         if (repo.existsByNombrePlatoIgnoreCase(nombreLimpio)) {
-            return null; 
+            return null; // El controlador se encargará de responder con el código 400 Bad Request
         }
 
         Menu nuevoPlato = new Menu();
@@ -75,14 +80,23 @@ public class MenuService {
         List<Menu> platos = repo.findAll();
 
         return platos.stream().map(plato -> {
-            String nombreCat = catRepo.findById(plato.getCategoria())
-                                      .map(c -> c.getNombre())
-                                      .orElse("SIN CATEGORÍA");
+            String nombreCat = (plato.getCategoria() != null)
+                                      ? plato.getCategoria().getNombre()
+                                      :"SIN CATEGORIA";
 
+            // 2. Extraer los nombres de la lista de ingredientes asociados al plato
+            List<String> nombresIngredientes = (plato.getIngredientes() != null)
+                ? plato.getIngredientes().stream()
+                                     .map(ingrediente -> ingrediente.getNombre())
+                                     .toList()
+                : List.of(); // Lista vacía si no tiene ingredientes
+
+            // 3. Retornar el DTO con la nueva estructura
             return new MenuDTO(
                 plato.getNombrePlato(),
                 plato.getPrecio(),
-                nombreCat
+                nombreCat,
+                nombresIngredientes
             );
         }).toList();
     }
