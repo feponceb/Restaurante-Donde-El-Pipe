@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UsuarioDTO {
+    
     private String rut;
     private String nombre;
     private String apellido;

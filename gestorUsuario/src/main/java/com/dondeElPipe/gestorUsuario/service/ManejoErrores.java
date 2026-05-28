@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -42,21 +43,19 @@ public class ManejoErrores {
 
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorDTO> manejarErroresNegocio(
-            IllegalArgumentException ex,
-            HttpServletRequest request) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleAllExceptions(
+            Exception ex, HttpServletRequest request) {
+        
+        Map<String, Object> respuesta = new HashMap<>();
+        
+        respuesta.put("timestamp", LocalDateTime.now().toString());
+        respuesta.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        respuesta.put("error", "Error Interno del Servidor");
+        respuesta.put("message", ex.getMessage());
+        respuesta.put("path", request.getRequestURI());
 
-        // Construye el ErrorDTO extrayendo el mensaje exacto enviado desde el Service
-        ErrorDTO errorDTO = new ErrorDTO(
-                LocalDateTime.now(),
-                400,            // Estado 400 Bad Request correcto para Postman
-                ex.getMessage(), // Aquí viajará "El email ya está registrado" o "El RUT ya está registrado"
-                null,           // Detalle en null según el formato de persistencia del PPT
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.badRequest().body(errorDTO);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
     }
 
 

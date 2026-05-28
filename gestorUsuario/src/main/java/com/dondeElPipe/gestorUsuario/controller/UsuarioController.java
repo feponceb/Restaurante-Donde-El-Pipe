@@ -3,7 +3,6 @@ package com.dondeElPipe.gestorUsuario.controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,8 +24,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService service;
+    private final UsuarioService service;
+
+    public UsuarioController(UsuarioService service) {
+        this.service = service;
+    }
 
     //buscar todos los usuarios
     @GetMapping("/usuarios")
@@ -47,7 +49,11 @@ public class UsuarioController {
     @PostMapping("/nuevo-usuario")
     public ResponseEntity<?> nuevoUsuario(@Valid @RequestBody Usuario usuario) {
         Usuario nuevo = service.crearUsuario(usuario);
-        
+
+        if (nuevo == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: El RUT o Email ya existen, el RUT es matemáticamente inválido, o el ID de Rol no existe.");
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
@@ -71,14 +77,22 @@ public class UsuarioController {
     public ResponseEntity<?> actualizarUsuario(@Valid @PathVariable Integer id, @RequestBody Usuario usuario) {
         Optional<Usuario> existente = service.buscarId(id);
 
-        if (existente.isPresent()) {
-            service.actualizarUsuario(id, usuario);
-            return ResponseEntity.status(HttpStatus.OK)
-                .body("Usuario modificado correctamente");
-        } else {
+        if (existente.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body("El usuario " + id + " no fue encontrado");
+                    .body("El usuario " + id + " no fue encontrado");
         }
+
+        
+        Usuario modificado = service.actualizarUsuario(id, usuario);
+
+        // Si el servicio bloqueó la edición por un RUT/Email duplicado de OTRA persona o RUT inválido
+        if (modificado == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error al actualizar: Verifique que el RUT sea válido y que el RUT o Email no pertenezcan a otro usuario.");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body("Usuario modificado correctamente");
     }
 
     @GetMapping("/buscar/{id}")

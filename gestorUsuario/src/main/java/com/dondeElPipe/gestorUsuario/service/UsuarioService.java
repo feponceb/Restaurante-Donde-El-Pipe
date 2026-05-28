@@ -3,7 +3,6 @@ package com.dondeElPipe.gestorUsuario.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dondeElPipe.gestorUsuario.DTO.UsuarioDTO;
@@ -15,11 +14,14 @@ import com.dondeElPipe.gestorUsuario.repository.UsuarioRepository;
 public class UsuarioService {
 
     //inyeción del repository
-    @Autowired
-    private UsuarioRepository repo;
+    private final UsuarioRepository repo;
+    private final RolRepository rolRepo;
 
-    @Autowired
-    private RolRepository rolRepo;
+    public UsuarioService(UsuarioRepository repo, RolRepository rolRepo) {
+        this.repo = repo;
+        this.rolRepo = rolRepo;
+    }
+
 
     //--+----+----+----+----+----+----+----+----+----+----+
     //--+----+----+----+--Crud básico--+----+----+----+----+----
@@ -32,26 +34,16 @@ public class UsuarioService {
 
     //crear un usuario
     public Usuario crearUsuario(Usuario usuario) {
-
+        if (usuario.getRut() == null || usuario.getEmail() == null || usuario.getRol() == null) {
+            return null;
+        }
         String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "");
-    
-        // 1. Validar RUT Matemático
-        if (!validarRutMatematico(rutLimpio)) {
-            throw new IllegalArgumentException("El RUT ingresado no es válido matemáticamente.");
-        }
-
-        // 2. Validar que el Rol Exista
-        if (usuario.getRol() == null || !rolRepo.existsById(usuario.getRol())) {
-            throw new IllegalArgumentException("El ID de Rol asignado no existe en el sistema.");
-        }
-
-        // 3. CONDICIONALES DE NEGOCIO: Validamos duplicados manualmente antes de guardar
-        if (repo.existsByRutIgnoreCase(usuario.getRut().trim())) {
-            throw new IllegalArgumentException("El RUT ya está registrado");
-        }
-
-        if (repo.existsByEmailIgnoreCase(usuario.getEmail().trim())) {
-            throw new IllegalArgumentException("El email ya está registrado");
+        String emailLimpio = usuario.getEmail().trim().toLowerCase();
+        if (!validarRutMatematico(rutLimpio) || 
+            !rolRepo.existsById(usuario.getRol()) || 
+            repo.existsByRutIgnoreCase(usuario.getRut().trim()) || 
+            repo.existsByEmailIgnoreCase(emailLimpio)) {
+            return null; 
         }
 
         // Si pasa todos los filtros, persistimos el objeto sanitizado
@@ -69,18 +61,32 @@ public class UsuarioService {
 
     //modificar un usuario
     public Usuario actualizarUsuario(Integer id, Usuario usuario){
-        // 1. Limpiamos y validamos el RUT también al modificar
-        String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "");
-        
-        if (!validarRutMatematico(rutLimpio)) {
-            return null; // Frena la actualización si inventaron un RUT
-        }
-
-        // 2. Si el rol que intentan asignar no existe, no dejamos guardar
-        if (usuario.getRol() == null || !rolRepo.existsById(usuario.getRol())) {
+        if (usuario.getRut() == null || usuario.getEmail() == null || usuario.getRol() == null) {
             return null;
         }
+
+        // 1. Limpiamos el RUT igual que en la creación
+        String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "").toUpperCase();
+        String emailLimpio = usuario.getEmail().trim().toLowerCase();
+
+        if (!validarRutMatematico(rutLimpio) || !rolRepo.existsById(usuario.getRol())) {
+            return null;
+        }
+
+        // 2. Verificamos duplicados usando el RUT limpio
+        Optional<Usuario> usuarioPorRut = repo.findByRutIgnoreCase(rutLimpio);
+        if (usuarioPorRut.isPresent() && !usuarioPorRut.get().getId().equals(id)) {
+            return null; // El RUT ya lo tiene otra persona
+        }
+
+        Optional<Usuario> usuarioPorEmail = repo.findByEmailIgnoreCase(emailLimpio);
+        if (usuarioPorEmail.isPresent() && !usuarioPorEmail.get().getId().equals(id)) {
+            return null; // El Email ya lo tiene otra persona
+        }
+
         usuario.setId(id);
+        usuario.setRut(usuario.getRut().trim());
+        usuario.setEmail(emailLimpio);
         return repo.save(usuario);
     }
 
@@ -131,7 +137,7 @@ public class UsuarioService {
             }
 
             // Retorna verdadero si el dígito calculado coincide con el ingresado por el usuario
-            return dvIngresado == dvEsperado;
+            return Character.toUpperCase(dvIngresado) == dvEsperado;
 
         } catch (NumberFormatException e) {
             return false; // Retorna falso si el cuerpo contiene caracteres inválidos que no sean números
@@ -147,13 +153,13 @@ public class UsuarioService {
                                       .map(r -> r.getNombre())
                                       .orElse("SIN ROL");
 
-            return new UsuarioDTO(
-                u.getRut(),
-                u.getNombre(),
-                u.getApellido(),
-                u.getEmail(),
-                nombreRol
-            );
+            UsuarioDTO dto = new UsuarioDTO();
+            dto.setRut(u.getRut());
+            dto.setNombre(u.getNombre());
+            dto.setApellido(u.getApellido());
+            dto.setEmail(u.getEmail());
+            dto.setNombreRol(nombreRol);
+            return dto;
         }).toList();
     }
 
