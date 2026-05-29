@@ -27,7 +27,6 @@ public class DetallePedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // Desacoplamos el plato del gestorMenu usando solo su ID numérico plano
     @NotNull(message = "Debe ingresar el ID del plato")
     @Column(name = "plato_id", nullable = false)
     private Integer platoId;
@@ -40,10 +39,9 @@ public class DetallePedido {
     @Column(nullable = false)
     private Double subtotal = 0.0;
 
-    // Relación hacia el padre (No se muestra en el JSON para evitar bucles infinitos)
     @ManyToOne
     @JoinColumn(name = "pedido_id", nullable = false)
-    @JsonIgnore
+    @JsonIgnore // Evita bucles infinitos en el JSON
     private Pedido pedido;
 
 }

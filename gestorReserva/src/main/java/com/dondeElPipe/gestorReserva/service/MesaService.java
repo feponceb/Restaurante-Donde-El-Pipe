@@ -1,11 +1,12 @@
 package com.dondeElPipe.gestorReserva.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.dondeElPipe.gestorReserva.DTO.MesaSImpleDTO;
 import com.dondeElPipe.gestorReserva.model.EstadoMesa;
 import com.dondeElPipe.gestorReserva.model.Mesa;
 import com.dondeElPipe.gestorReserva.repository.MesaRepository;
@@ -13,29 +14,71 @@ import com.dondeElPipe.gestorReserva.repository.MesaRepository;
 @Service
 public class MesaService {
 
-    @Autowired
-    private MesaRepository mesaRepo;
+    private final MesaRepository repo;
 
-    // Listar todas las mesas (Ideal para ver el mapa del comedor)
+    public MesaService(MesaRepository repo) {
+        this.repo = repo;
+    }
+
+    // 1. GUARDAR MESA
+    public Mesa guardarMesa(Mesa mesa) {
+        // Forzamos que al crearse, la mesa inicie siempre como Habilitada
+        mesa.setEstado(EstadoMesa.Habilitada);
+        return repo.save(mesa);
+    }
+
+    // 2. LISTAR MESAS
     public List<Mesa> listarTodas() {
-        return mesaRepo.findAll();
+        return repo.findAll();
     }
 
-    // Buscar una mesa específica por su ID (El método que llama gestorPedidos)
+    // 3. BUSCAR POR ID
     public Optional<Mesa> buscarPorId(Integer id) {
-        return mesaRepo.findById(id);
+        return repo.findById(id);
     }
 
-    // Modificar el estado de una mesa (Para pasarla a Ocupada, Reservada, etc.)
+    // 4. CAMBIAR ESTADO DE LA MESA
     public Mesa cambiarEstadoMesa(Integer id, EstadoMesa nuevoEstado) {
-        Optional<Mesa> mesaOpt = mesaRepo.findById(id);
+        Optional<Mesa> mesaOpt = repo.findById(id);
         
-        if (mesaOpt.isPresent()) {
-            Mesa mesa = mesaOpt.get();
-            mesa.setEstado(nuevoEstado);
-            return mesaRepo.save(mesa);
+        // Validación de presencia usando isEmpty() como en tus otros servicios
+        if (mesaOpt.isEmpty()) {
+            return null;
         }
-        return null; // Si la mesa no existe
+        
+        Mesa mesa = mesaOpt.get();
+        mesa.setEstado(nuevoEstado);
+        return repo.save(mesa);
+    }
+
+    // ==========================================
+    // NUEVAS FUNCIONES DTO (CON MANEJO DE ERRORES)
+    // ==========================================
+
+    public List<MesaSImpleDTO> listarTodasDTO() {
+        List<Mesa> mesas = repo.findAll();
+        List<MesaSImpleDTO> listaDTO = new ArrayList<>();
+        for (Mesa m : mesas) {
+            listaDTO.add(convertirADTO(m));
+        }
+        return listaDTO;
+    }
+
+    public MesaSImpleDTO obtenerPorIdDTO(Integer id) {
+        Optional<Mesa> mesaOpt = repo.findById(id);
+        if (mesaOpt.isEmpty()) {
+            throw new IllegalArgumentException("No se encontró la mesa con el ID: " + id);
+        }
+        return convertirADTO(mesaOpt.get());
+    }
+
+    // Método de mapeo manual auxiliar tradicional
+    private MesaSImpleDTO convertirADTO(Mesa mesa) {
+        MesaSImpleDTO dto = new MesaSImpleDTO();
+        dto.setIdMesa(mesa.getId());
+        dto.setCapacidadAsientos(mesa.getCapacidadAsientos());
+        dto.setEstadoMesa(mesa.getEstado().name());
+        return dto;
     }
 
 }

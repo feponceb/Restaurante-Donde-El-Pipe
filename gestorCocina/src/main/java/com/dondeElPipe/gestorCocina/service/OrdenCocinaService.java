@@ -1,14 +1,13 @@
 package com.dondeElPipe.gestorCocina.service;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dondeElPipe.gestorCocina.DTO.OrdenCocinaDTO;
+import com.dondeElPipe.gestorCocina.model.EstadoCocina;
 import com.dondeElPipe.gestorCocina.model.OrdenCocina;
 import com.dondeElPipe.gestorCocina.repository.OrdenCocinaRepository;
 
@@ -18,41 +17,52 @@ public class OrdenCocinaService {
     @Autowired
     private OrdenCocinaRepository repo;
 
-    // 1. Recibir un pedido pagado y ponerlo "EN_ESPERA" en la cola de la cocina
-    public OrdenCocinaDTO recibirPedidoEnCocina(Integer pedidoId) {
-        OrdenCocina orden = new OrdenCocina();
-        orden.setPedidoId(pedidoId);
-        orden.setEstadoCocina("EN_ESPERA");
-        orden.setFechaIngreso(LocalDateTime.now());
+    // CAMBIO CRÍTICO: Inyectamos el servicio especializado, no el repositorio ajeno
+    @Autowired
+    private EstadoCocinaService estadoService; 
 
-        OrdenCocina guardada = repo.save(orden);
-        return mapearADto(guardada);
+    // ========================================================
+    // FUNCIONES NORMALES (Retornan Entidad Cruda 'OrdenCocina')
+    // ========================================================
+
+    // 1. RECIBIR PEDIDO DESDE EL GESTOR DE PEDIDOS (Escritura Normal)
+    public OrdenCocina recibirPedidoEnCocina(Integer pedidoId) {
+        EstadoCocina estado = estadoService.buscarPorNombre("EN_ESPERA");
+        OrdenCocina orden = new OrdenCocina(null, pedidoId, estado.getId(), LocalDateTime.now());
+        return repo.save(orden);
     }
 
-    // 2. Cambiar el estado (Ej: de "EN_ESPERA" a "PREPARANDO" o "LISTO")
-    public OrdenCocinaDTO actualizarEstado(Integer id, String nuevoEstado) {
-        Optional<OrdenCocina> ordenOpt = repo.findById(id);
-        
-        if (ordenOpt.isPresent()) {
-            OrdenCocina orden = ordenOpt.get();
-            orden.setEstadoCocina(nuevoEstado.toUpperCase().trim());
-            return mapearADto(repo.save(orden));
-        }
-        return null;
+    // 2. ACTUALIZAR ESTADO DE LA ORDEN (Mutación Normal)
+    public OrdenCocina actualizarEstado(Integer id, Integer nuevoEstadoId) {
+        estadoService.buscarPorId(nuevoEstadoId); // Valida si el estado existe
+
+        OrdenCocina orden = repo.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("La orden de cocina con ID " + id + " no existe."));
+
+        orden.setEstadoCocina(nuevoEstadoId);
+        return repo.save(orden);
     }
 
-    // 3. Listar solo las órdenes que los cocineros tienen activas en la pantalla
+    // ========================================================
+    // FUNCIONES DTO (Retornan Salidas Simplificadas para Lectura)
+    // ========================================================
+
+    // 3. PANTALLA MONITOR DE ORDENES ACTIVAS (Consulta DTO)
     public List<OrdenCocinaDTO> listarOrdenesActivas() {
-        List<OrdenCocina> activas = repo.findByEstadoCocinaIn(Arrays.asList("EN_ESPERA", "PREPARANDO"));
+        Integer idEnEspera = estadoService.buscarPorNombre("EN_ESPERA").getId();
+        Integer idPreparando = estadoService.buscarPorNombre("PREPARANDO").getId();
+
+        List<OrdenCocina> activas = repo.findByEstadoCocinaIn(List.of(idEnEspera, idPreparando));
         return activas.stream().map(this::mapearADto).toList();
     }
 
-    // Función auxiliar de mapeo para evitar repetir código
+    // Método auxiliar de mapeo Entidad -> DTO
     private OrdenCocinaDTO mapearADto(OrdenCocina orden) {
+        String nombreEstado = estadoService.buscarPorId(orden.getEstadoCocina()).getNombre();
         return new OrdenCocinaDTO(
             orden.getId(),
             orden.getPedidoId(),
-            orden.getEstadoCocina(),
+            nombreEstado,
             orden.getFechaIngreso()
         );
     }

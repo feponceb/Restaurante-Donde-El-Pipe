@@ -28,11 +28,17 @@ public class PagoController {
     // procesar un pago
     @PostMapping("/procesar")
     public ResponseEntity<?> procesarPago(@Valid @RequestBody Pago pago) {
-        // Delegamos todo el flujo al service
-        PagoDTO nuevoPagoDTO = service.registrarPago(pago);
+        // Ejecuta la lógica de negocio con las llamadas RestTemplate reales
+        Pago nuevoPago = service.registrarPagoYNotificar(pago);
         
-        // Retornamos la respuesta correcta estructurada con un 201 Created
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoPagoDTO);
+        if (nuevoPago == null) {
+            // Respuesta explícita controlada (PPT Parte 6)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: No se pudo procesar el pago. El pedido número " + pago.getPedidoId() + " no existe en el sistema de Pedidos (Puerto 8083) o la conexión falló.");
+        }
+    
+        // 201 Created para inserciones exitosas
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoPago);
     }
 
     // consultar y verificar el pago de un pedido
@@ -47,6 +53,19 @@ public class PagoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("No se registran pagos aprobados para el pedido número: " + pedidoId);
         }
+    }
+
+    // Obtener comprobante simplificado del pago en formato DTO
+    @GetMapping("/comprobante/{id}")
+    public ResponseEntity<?> obtenerComprobante(@PathVariable Integer id) {
+        PagoDTO dto = service.obtenerDetallePagoDTO(id);
+        
+        if (dto == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No se encontró ningún registro con el ID de pago proporcionado.");
+        }
+        
+        return ResponseEntity.ok(dto);
     }
 
 }

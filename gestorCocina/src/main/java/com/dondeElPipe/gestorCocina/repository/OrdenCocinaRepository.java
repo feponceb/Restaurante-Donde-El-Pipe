@@ -9,6 +9,6 @@ import com.dondeElPipe.gestorCocina.model.OrdenCocina;
 
 @Repository
 public interface OrdenCocinaRepository extends JpaRepository<OrdenCocina, Integer>{
-    List<OrdenCocina> findByEstadoCocinaIn(List<String> estados);
+    List<OrdenCocina> findByEstadoCocinaIn(List<Integer> estadoIds);
 
 }

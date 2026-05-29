@@ -24,7 +24,6 @@ public class PrecargaMesas {
                 mesaRepo.save(new Mesa(null, 6, EstadoMesa.Habilitada)); // Mesa 5 (Familiar grande)
                 mesaRepo.save(new Mesa(null, 8, EstadoMesa.Habilitada)); // Mesa 6 (Cumpleaños / Banquetes)
                 
-                System.out.println(">> Comedor de 'Donde El Pipe' inicializado con éxito (Mesas de la 1 a la 6).");
             }
         };
     }

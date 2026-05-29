@@ -3,9 +3,9 @@ package com.dondeElPipe.gestorPedidos.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.dondeElPipe.gestorPedidos.model.Pedido;
+import com.dondeElPipe.gestorPedidos.model.EstadoPedido;
 
 @Repository
-public interface PedidoRepository extends JpaRepository<Pedido, Integer>{
+public interface EstadoPedidoRepository extends JpaRepository<EstadoPedido, Integer>{
 
 }

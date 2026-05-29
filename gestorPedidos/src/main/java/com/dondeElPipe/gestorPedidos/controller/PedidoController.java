@@ -1,19 +1,20 @@
 package com.dondeElPipe.gestorPedidos.controller;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dondeElPipe.gestorPedidos.DTO.PedidoLegibleDTO;
+import com.dondeElPipe.gestorPedidos.DTO.PedidoSimpleDTO;
+import com.dondeElPipe.gestorPedidos.model.EstadoPedido;
 import com.dondeElPipe.gestorPedidos.model.Pedido;
 import com.dondeElPipe.gestorPedidos.service.PedidoService;
 
@@ -23,45 +24,45 @@ import jakarta.validation.Valid;
 @RequestMapping("/pedidos")
 public class PedidoController {
 
-    @Autowired
-    private PedidoService service;
+    private final PedidoService service;
 
-    // 1. Endpoint para Listar todos los pedidos
-    @GetMapping("/todo")
-    public ResponseEntity<List<Pedido>> obtenerTodosLosPedidos() {
-        return ResponseEntity.ok(service.listarTodos());
+    public PedidoController(PedidoService service) {
+        this.service = service;
     }
 
-    
-
-    // 2. Endpoint para crear un pedido nuevo (Local, Delivery o Llevar)
+    // 1. CREAR NUEVO PEDIDO (Retorna Entidad Cruda)
     @PostMapping("/nuevo")
-    public ResponseEntity<?> crearNuevoPedido(@Valid @RequestBody Pedido pedido) {
-        Pedido creado = service.crearPedido(pedido);
-        
-        // Si el servicio retornó null, significa que falló alguna regla estricta de negocio
-        if (creado == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error al procesar el pedido. Verifique que: \n"
-                        + "1. Si es Local, haya enviado un 'mesaId' existente y HABILITADA.\n"
-                        + "2. El pedido no venga sin platos en el detalle.");
-        }
-        
-        // Retornamos un estado 201 Created con el objeto ya calculado por el backend
-        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
+    public ResponseEntity<Pedido> crearNuevoPedido(@Valid @RequestBody Pedido pedido) {
+        Pedido nuevo = service.crearPedido(pedido);
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
 
-    @GetMapping("/buscar/{id}")
-    public ResponseEntity<?> obtenerPedidoPorId(@PathVariable Integer id) {
-        Optional<Pedido> pedidoOpt = service.buscarPorId(id);
+    // 2. ACTUALIZAR ESTADO (Retorna Entidad Cruda)
+    @PutMapping("/actualizar-estado/{id}")
+    public ResponseEntity<Pedido> actualizarEstadoPedido(@PathVariable Integer id, @RequestBody EstadoPedido nuevoEstado) {
+        Pedido actualizado = service.actualizarEstado(id, nuevoEstado);
+        return ResponseEntity.ok(actualizado);
+    }
 
-        if (pedidoOpt.isPresent()) {
-            PedidoLegibleDTO legible = service.convertirALegible(pedidoOpt.get());
-            return ResponseEntity.ok(legible); // Retorna código 200 con el DTO premium
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("El pedido con ID " + id + " no fue encontrado en el sistema."); // Retorna 404
-        }
+    // 3. BUSCAR PEDIDO POR ID (Retorna DTO)
+    @GetMapping("/buscar/{id}")
+    public ResponseEntity<PedidoSimpleDTO> obtenerPorId(@PathVariable Integer id) {
+        PedidoSimpleDTO dto = service.buscarPorIdDTO(id);
+        return ResponseEntity.ok(dto);
+    }
+
+    // 4. LISTAR TODOS LOS PEDIDOS (Retorna Lista DTO)
+    @GetMapping("/todo")
+    public ResponseEntity<List<PedidoSimpleDTO>> obtenerTodos() {
+        List<PedidoSimpleDTO> lista = service.listarTodosDTO();
+        return ResponseEntity.ok(lista);
+    }
+
+    // 5. ELIMINAR PEDIDO
+    @DeleteMapping("/eliminar/{id}")
+    public ResponseEntity<String> borrarPedido(@PathVariable Integer id) {
+        service.eliminarPedido(id);
+        return ResponseEntity.ok("El pedido con ID " + id + " fue eliminado exitosamente.");
     }
 
 }

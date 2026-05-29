@@ -1,9 +1,22 @@
 package com.dondeElPipe.gestorPedidos.model;
 
-public enum TipoPedido {
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    Local,      //EN el propio restaurante
-    Delivery,   //En un lugar de entrega
-    Llevar      //Retiro en local
+@Entity
+@Table(name = "tipo_pedido")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class TipoPedido {
+    
+    @Id
+    private Integer id;
+
+    private String nombre;
 
 }

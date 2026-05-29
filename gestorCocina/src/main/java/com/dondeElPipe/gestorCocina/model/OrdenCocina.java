@@ -8,7 +8,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,9 +28,9 @@ public class OrdenCocina {
     @Column(name = "pedido_id", nullable = false)
     private Integer pedidoId;
 
-    @NotBlank(message = "El estado de la cocina es obligatorio")
+    @NotNull(message = "El estado de la cocina es obligatorio")
     @Column(name = "estado_cocina", nullable = false, length = 30) // "EN_ESPERA", "PREPARANDO", "LISTO"
-    private String estadoCocina;
+    private Integer estadoCocina;
 
     @Column(name = "fecha_ingreso", nullable = false)
     private LocalDateTime fechaIngreso;

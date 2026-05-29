@@ -4,16 +4,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -21,7 +19,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "pedido") 
+@Table(name = "pedido")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,34 +29,24 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    //si es nulo es porque es tipo delivery
-    @Column(name = "mesa_id", nullable = true)
-    private Integer mesaId;
+    @ManyToOne
+    @JoinColumn(name = "tipo_pedido_id")
+    @NotNull(message = "El tipo de pedido es obligatorio")
+    private TipoPedido tipoPedido;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_pedido", nullable = false, length = 20)
-    private TipoPedido tipoPedido = TipoPedido.Local; // Por defecto es LOCAL
+    @ManyToOne
+    @JoinColumn(name = "estado_pedido_id")
+    private EstadoPedido estadoPedido;
 
-    @NotNull(message = "Debe asignar el ID del garzón")
-    @Column(name = "usuario_id", nullable = false)
+    @NotNull(message = "El ID del usuario/garzón responsable es obligatorio.")
     private Integer usuarioId;
 
-    @Column(nullable = false)
-    private Double total = 0.0;
+    private Integer mesaId; // Obligatorio solo si tipoPedido == Local
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private EstadoPedido estado = EstadoPedido.Pendiente; // Por defecto nace PENDIENTE
-
-    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JoinColumn(name = "pedido_id")
     private List<DetallePedido> detalles;
-
-    @PrePersist
-    protected void onCreate() {
-        this.fechaCreacion = LocalDateTime.now();
-    }
 
 }

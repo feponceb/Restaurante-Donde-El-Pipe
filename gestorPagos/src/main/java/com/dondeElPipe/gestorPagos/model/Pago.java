@@ -39,7 +39,7 @@ public class Pago {
     @Column(name = "metodo_pago", nullable = false, length = 30) // Ej: "EFECTIVO", "TARJETA", "TRANSFERENCIA"
     private String metodoPago;
 
-    @NotBlank(message = "El estado del pago es obligatorio")
+    //@NotBlank(message = "El estado del pago es obligatorio")
     @Column(nullable = false, length = 20) // "PENDIENTE", "APROBADO", "RECHAZADO"
     private String estado;
 

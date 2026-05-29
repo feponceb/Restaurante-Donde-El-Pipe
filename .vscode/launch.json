@@ -57,6 +57,37 @@
             "projectName": "gestorReserva",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorPagosApplication<gestorPagos>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorPagos.GestorPagosApplication",
+            "projectName": "gestorPagos",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorCocinaApplication<gestorCocina>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorCocina.GestorCocinaApplication",
+            "projectName": "gestorCocina",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-GestorDeliveryApplication<gestorDelivery>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.dondeElPipe.gestorDelivery.GestorDeliveryApplication",
+            "projectName": "gestorDelivery",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

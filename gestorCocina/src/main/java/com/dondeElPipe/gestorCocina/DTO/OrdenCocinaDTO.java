@@ -11,7 +11,7 @@ public class OrdenCocinaDTO {
 
     private Integer id;
     private Integer pedidoId;
-    private String estadoCocina;
+    private String nombreEstadoCocina; // "EN_ESPERA", "PREPARANDO", "LISTO"
     private LocalDateTime fechaIngreso;
 
 }
