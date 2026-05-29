@@ -27,7 +27,7 @@ public class PagoService {
         // ---------------------------------------------------------------------------------
         // COMUNICACIÓN REAL 1: Consultar datos auténticos al MS Pedidos (Puerto 8083)
         // ---------------------------------------------------------------------------------
-        String urlPedidos = "http://localhost:8083/pedidos/detalle/" + pago.getPedidoId();
+        String urlPedidos = "http://localhost:8083/pedidos/buscar/" + pago.getPedidoId();
         PedidoSimpleDTO pedidoDto;
         
         try {
