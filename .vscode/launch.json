@@ -2,90 +2,11 @@
     "configurations": [
         {
             "type": "java",
-            "name": "GestorUsuarioApplication",
-            "request": "launch",
-            "mainClass": "com.dondeElPipe.gestorUsuario.GestorUsuarioApplication",
-            "projectName": ""
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-GestorMenuApplication<gestorMenu>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.dondeElPipe.gestorMenu.GestorMenuApplication",
-            "projectName": "gestorMenu",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env",
-            "vmArgs": " -Dcom.sun.management.jmxremote"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-GestorInventarioApplication<gestorInventario>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.dondeElPipe.gestorInventario.GestorInventarioApplication",
-            "projectName": "gestorInventario",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
             "name": "Spring Boot-GestorUsuarioApplication<gestorUsuario>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.dondeElPipe.gestorUsuario.GestorUsuarioApplication",
             "projectName": "gestorUsuario",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-GestorPedidosApplication<gestorPedidos>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.dondeElPipe.gestorPedidos.GestorPedidosApplication",
-            "projectName": "gestorPedidos",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-GestorReservaApplication<gestorReserva>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.dondeElPipe.gestorReserva.GestorReservaApplication",
-            "projectName": "gestorReserva",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-GestorPagosApplication<gestorPagos>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.dondeElPipe.gestorPagos.GestorPagosApplication",
-            "projectName": "gestorPagos",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-GestorCocinaApplication<gestorCocina>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.dondeElPipe.gestorCocina.GestorCocinaApplication",
-            "projectName": "gestorCocina",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env",
-            "vmArgs": " -Dcom.sun.management.jmxremote"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-GestorDeliveryApplication<gestorDelivery>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.dondeElPipe.gestorDelivery.GestorDeliveryApplication",
-            "projectName": "gestorDelivery",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         }
