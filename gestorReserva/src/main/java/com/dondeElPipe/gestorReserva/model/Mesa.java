@@ -32,8 +32,8 @@ public class Mesa {
     @Column(nullable = false)
     private Integer capacidadAsientos;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private EstadoMesa estado = EstadoMesa.Habilitada;
+    @NotNull(message = "Debe asignar un estado a la mesa")
+    @Column(name = "estado_id", nullable = false)
+    private Integer estado;
 
 }

@@ -4,26 +4,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dondeElPipe.gestorReserva.DTO.MesaSImpleDTO;
 import com.dondeElPipe.gestorReserva.model.EstadoMesa;
 import com.dondeElPipe.gestorReserva.model.Mesa;
+import com.dondeElPipe.gestorReserva.repository.EstadoMesaRepository;
 import com.dondeElPipe.gestorReserva.repository.MesaRepository;
 
 @Service
 public class MesaService {
 
-    private final MesaRepository repo;
+    @Autowired
+    private MesaRepository repo;
 
-    public MesaService(MesaRepository repo) {
-        this.repo = repo;
-    }
+    @Autowired
+    private EstadoMesaRepository estadoMesaRepo;
 
     // 1. GUARDAR MESA
     public Mesa guardarMesa(Mesa mesa) {
-        // Forzamos que al crearse, la mesa inicie siempre como Habilitada
-        mesa.setEstado(EstadoMesa.Habilitada);
+        // Forzamos que al crearse, inicie con el ID 1 (que corresponde a "Habilitada" en la BD)
+        mesa.setEstado(1);
         return repo.save(mesa);
     }
 
@@ -38,11 +40,11 @@ public class MesaService {
     }
 
     // 4. CAMBIAR ESTADO DE LA MESA
-    public Mesa cambiarEstadoMesa(Integer id, EstadoMesa nuevoEstado) {
+    public Mesa cambiarEstadoMesa(Integer id, Integer nuevoEstado) {
         Optional<Mesa> mesaOpt = repo.findById(id);
         
-        // Validación de presencia usando isEmpty() como en tus otros servicios
-        if (mesaOpt.isEmpty()) {
+        // Validación de presencia y verificación de que el ID del estado exista
+        if (mesaOpt.isEmpty() || !estadoMesaRepo.existsById(nuevoEstado)) {
             return null;
         }
         
@@ -74,10 +76,15 @@ public class MesaService {
 
     // Método de mapeo manual auxiliar tradicional
     private MesaSImpleDTO convertirADTO(Mesa mesa) {
+        // CORRECCIÓN: Usamos una expresión lambda (e -> e.getNombre()) en lugar de EstadoMesa::getNombre
+        String nombreEstado = estadoMesaRepo.findById(mesa.getEstado())
+                                            .map(e -> e.getNombre())
+                                            .orElse("DESCONOCIDO");
+
         MesaSImpleDTO dto = new MesaSImpleDTO();
         dto.setIdMesa(mesa.getId());
         dto.setCapacidadAsientos(mesa.getCapacidadAsientos());
-        dto.setEstadoMesa(mesa.getEstado().name());
+        dto.setEstadoMesa(nombreEstado); // Asigna el String (ej: "Habilitada") al DTO
         return dto;
     }
 

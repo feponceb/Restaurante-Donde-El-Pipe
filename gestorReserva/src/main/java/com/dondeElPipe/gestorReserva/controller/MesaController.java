@@ -3,6 +3,7 @@ package com.dondeElPipe.gestorReserva.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,12 +25,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/reserva/mesas")
 public class MesaController {
 
-    private final MesaService service;
-
-    // Inyección manual por constructor
-    public MesaController(MesaService service) {
-        this.service = service;
-    }
+    @Autowired
+    private MesaService service;
 
     // 1. REGISTRAR NUEVA MESA 
     @PostMapping("/agregar")
@@ -59,29 +56,22 @@ public class MesaController {
     @PutMapping("/actualizar-estado/{id}")
     public ResponseEntity<String> cambiarEstado(
             @PathVariable Integer id, 
-            @RequestBody java.util.Map<String, String> body) {
+            @RequestBody java.util.Map<String, Integer> body) { // Cambiado a Integer el valor del mapa
             
-        // Extraemos el valor del JSON enviado en el body
-        String estadoString = body.get("nuevoEstado");
+        // Extraemos el ID numérico del estado enviado en el JSON
+        Integer nuevoEstadoId = body.get("nuevoEstado");
         
-        if (estadoString == null) {
-            return ResponseEntity.badRequest().body("Debe especificar la propiedad 'nuevoEstado' en el cuerpo JSON.");
+        if (nuevoEstadoId == null) {
+            return ResponseEntity.badRequest().body("Debe especificar la propiedad 'nuevoEstado' con un ID numérico en el cuerpo JSON.");
         }
         
-        try {
-            // Convertimos el String del JSON al Enum EstadoMesa
-            EstadoMesa nuevoEstado = EstadoMesa.valueOf(estadoString);
-            
-            Mesa mesaActualizada = service.cambiarEstadoMesa(id, nuevoEstado);
-            
-            if (mesaActualizada != null) {
-                return ResponseEntity.ok("El estado de la mesa ID " + id + " cambio a: " + nuevoEstado);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("No se encontro la mesa con el ID: " + id);
-            }
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("El estado enviado no es valido. Use: Habilitada, Ocupada o Reservada.");
+        Mesa mesaActualizada = service.cambiarEstadoMesa(id, nuevoEstadoId);
+        
+        if (mesaActualizada != null) {
+            return ResponseEntity.ok("El estado de la mesa ID " + id + " cambió exitosamente al ID de estado: " + nuevoEstadoId);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No se pudo actualizar. Verifique que la mesa ID " + id + " exista y que el ID de estado sea válido.");
         }
     }
 
