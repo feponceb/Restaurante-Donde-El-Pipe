@@ -3,6 +3,7 @@ package com.dondeElPipe.gestorUsuario.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dondeElPipe.gestorUsuario.DTO.UsuarioDTO;
@@ -14,31 +15,33 @@ import com.dondeElPipe.gestorUsuario.repository.UsuarioRepository;
 public class UsuarioService {
 
     //inyeción del repository
-    private final UsuarioRepository repo;
-    private final RolRepository rolRepo;
+    @Autowired
+    private UsuarioRepository repo;
 
-    public UsuarioService(UsuarioRepository repo, RolRepository rolRepo) {
-        this.repo = repo;
-        this.rolRepo = rolRepo;
-    }
-
+    @Autowired
+    private RolRepository rolRepo;
 
     //--+----+----+----+----+----+----+----+----+----+----+
     //--+----+----+----+--Crud básico--+----+----+----+----+----
     //--+----+----+----+----+----+----+----+----+----+----+
 
     //ver todos los usuarios
-    public List<Usuario> listar(){
-        return repo.findAll();
+    public List<UsuarioDTO> listar() {
+        List<Usuario> usuarios = repo.findAll();
+        return usuarios.stream()
+                       .map(this::convertirADto)
+                       .toList();
     } 
 
     //crear un usuario
-    public Usuario crearUsuario(Usuario usuario) {
+    public UsuarioDTO crearUsuario(Usuario usuario) {
         if (usuario.getRut() == null || usuario.getEmail() == null || usuario.getRol() == null) {
             return null;
         }
+        
         String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "");
         String emailLimpio = usuario.getEmail().trim().toLowerCase();
+        
         if (!validarRutMatematico(rutLimpio) || 
             !rolRepo.existsById(usuario.getRol()) || 
             repo.existsByRutIgnoreCase(usuario.getRut().trim()) || 
@@ -48,9 +51,13 @@ public class UsuarioService {
 
         // Si pasa todos los filtros, persistimos el objeto sanitizado
         usuario.setRut(usuario.getRut().trim());
-        usuario.setEmail(usuario.getEmail().trim().toLowerCase());
+        usuario.setEmail(emailLimpio);
 
-        return repo.save(usuario);
+        // Guardamos en la base de datos
+        Usuario usuarioGuardado = repo.save(usuario);
+        
+        // Retornamos el DTO mapeado (sin el password)
+        return convertirADto(usuarioGuardado);
     }
 
 
@@ -60,12 +67,11 @@ public class UsuarioService {
     } 
 
     //modificar un usuario
-    public Usuario actualizarUsuario(Integer id, Usuario usuario){
+    public Usuario actualizarUsuario(Integer id, Usuario usuario) {
         if (usuario.getRut() == null || usuario.getEmail() == null || usuario.getRol() == null) {
             return null;
         }
 
-        // 1. Limpiamos el RUT igual que en la creación
         String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "").toUpperCase();
         String emailLimpio = usuario.getEmail().trim().toLowerCase();
 
@@ -73,15 +79,14 @@ public class UsuarioService {
             return null;
         }
 
-        // 2. Verificamos duplicados usando el RUT limpio
         Optional<Usuario> usuarioPorRut = repo.findByRutIgnoreCase(rutLimpio);
         if (usuarioPorRut.isPresent() && !usuarioPorRut.get().getId().equals(id)) {
-            return null; // El RUT ya lo tiene otra persona
+            return null; 
         }
 
         Optional<Usuario> usuarioPorEmail = repo.findByEmailIgnoreCase(emailLimpio);
         if (usuarioPorEmail.isPresent() && !usuarioPorEmail.get().getId().equals(id)) {
-            return null; // El Email ya lo tiene otra persona
+            return null; 
         }
 
         usuario.setId(id);
@@ -95,8 +100,24 @@ public class UsuarioService {
     //--+----+----+----+----+----+----+----+----+----+----+
 
     //buscar por id
-    public Optional<Usuario> buscarId(Integer id){
-        return repo.findById(id);
+    public Optional<UsuarioDTO> buscarId(Integer id) {
+        return repo.findById(id).map(this::convertirADto);
+    }
+
+    //transformadorDTO
+    private UsuarioDTO convertirADto(Usuario u) {
+        String nombreRol = rolRepo.findById(u.getRol())
+                                  .map(r -> r.getNombre())
+                                  .orElse("SIN ROL");
+
+        UsuarioDTO dto = new UsuarioDTO();
+        dto.setId(u.getId());
+        dto.setRut(u.getRut());
+        dto.setNombre(u.getNombre());
+        dto.setApellido(u.getApellido());
+        dto.setEmail(u.getEmail());
+        dto.setNombreRol(nombreRol);
+        return dto;
     }
 
     // Algoritmo matemático para validar el RUT chileno (Módulo 11)
