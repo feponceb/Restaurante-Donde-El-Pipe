@@ -15,81 +15,66 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dondeElPipe.gestorInventario.DTO.InventarioDTO;
 import com.dondeElPipe.gestorInventario.model.Inventario;
 import com.dondeElPipe.gestorInventario.service.InventarioService;
 
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/inventario/insumos")
+@RequestMapping("/inventario")
 public class InventarioController {
 
     //inyeccion de service
     @Autowired
     private InventarioService service;
     
-    //--+----+----+----+----+----+----+----+----+----+----+--
-    //--+----+----+----+--Metodos Crud--+----+----+----+----+--
-    //--+----+----+----+----+----+----+----+----+----+----+--
-
-    //buscar todo
-    @GetMapping("/todo")
-    public ResponseEntity<List<Inventario>> listar() {
-        List<Inventario> inventarios = service.listar();
-        return ResponseEntity.ok(inventarios);
+    /**
+     * Ver el estado actual de toda la bodega
+     * GET: http://localhost:8081/inventario/listar
+     */
+    @GetMapping("/listar")
+    public ResponseEntity<List<Inventario>> listarTodo() {
+        return ResponseEntity.ok(service.obtenerTodo());
     }
 
-    // buscar todo en formato DTO
-    @GetMapping("/todoDTO")
-    public ResponseEntity<List<InventarioDTO>> listarDTO() {
-        // El service internamente ya se encarga de transformar las entidades a DTOs
-        List<InventarioDTO> inventarios = service.listarDTO();
-        return ResponseEntity.ok(inventarios);
+    /**
+     * AGREGAR / REABASTECER PRODUCTO
+     * POST: http://localhost:8081/inventario/agregar
+     * Body JSON: { "nombreIngrediente": "Pan", "stock": 50 }
+     * Nota: Si "Pan" ya existía con 200, pasará a tener 250 de forma automática.
+     */
+    @PostMapping("/agregar")
+    public ResponseEntity<Inventario> agregarOReabastecer(@Valid @RequestBody Inventario item) {
+        Inventario guardado = service.agregarOReabastecer(item);
+        return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
     }
-    
-    //--+----+----+----+--Crear un insumo--+----+----+----+----+--
-    //crear un inventario Response
-    @PostMapping("/nuevo-insumo")
-    public ResponseEntity<?> nuevoInventario(@Valid @RequestBody Inventario inventario) {
-        Inventario nuevo = service.crearInsumo(inventario);
 
-        if (nuevo == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body("Error: El nombre del inventario '" + inventario.getNombreInsumo() + "' ya existe.");
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
-    }
-    
-    //--+----+----+----+--Eliminar un insumo--+----+----+----+----+--
-    //eliminar un inventario por id
-    @DeleteMapping("/eliminar-insumo/{id}")
-    public ResponseEntity<?> eliminarInventario(@PathVariable Integer id) {
-        Optional<Inventario> inventario = service.buscarId(id);
-
-        if (inventario.isPresent()) {
-            service.eliminarInsumo(id);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                    .body("El inventario " + id + " no fue encontrado");
+    /**
+     * MODIFICAR DATOS DE UN PRODUCTO POR ID
+     * PUT: http://localhost:8081/inventario/modificar/3
+     * Body JSON: { "nombreIngrediente": "Palta Hass", "stock": 15 }
+     */
+    @PutMapping("/modificar/{id}")
+    public ResponseEntity<?> modificar(@PathVariable Integer id, @Valid @RequestBody Inventario item) {
+        try {
+            Inventario actualizado = service.modificarProducto(id, item);
+            return ResponseEntity.ok(actualizado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
-    //--+----+----+----+--Actualizar un insumo--+----+----+----+----+--
-    //actualizar un inventario
-    @PutMapping("/modificar-insumo/{id}")
-    public ResponseEntity<?> actualizarInventario(@Valid @PathVariable Integer id, @RequestBody Inventario inventario) {
-        Optional<Inventario> existente = service.buscarId(id);
-
-        if (existente.isPresent()) {
-            service.actualizarInsumo(id, inventario);
-            return ResponseEntity.status(HttpStatus.OK)
-                                    .body("Inventario modificado correctamente");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                    .body("El inventario " + id + " no fue encontrado");
+    /**
+     * Endpoint interno para que Cocina rebaje insumos.
+     * PUT: http://localhost:8081/inventario/descontar
+     */
+    @PutMapping("/descontar")
+    public ResponseEntity<String> descontar(@RequestBody List<String> ingredientes) {
+        try {
+            service.descontarStock(ingredientes);
+            return ResponseEntity.ok("Stock actualizado correctamente en bodega.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 

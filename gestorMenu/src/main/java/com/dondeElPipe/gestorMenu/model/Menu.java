@@ -2,7 +2,11 @@ package com.dondeElPipe.gestorMenu.model;
 
 
 
+import java.util.List;
+
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,6 +36,10 @@ public class Menu {
     @Column(nullable = false, length = 99, unique = true)
     private String nombrePlato;
 
+    @NotBlank(message = "Debe de tener una descripción")
+    @Column(nullable = false, length = 255)
+    private String descripcion;
+
     @NotNull(message = "Debe de tener un precio")
     @Column(nullable = false)
     @Min(value = 4990, message = "Debe de tener un precio de almenos 4,990")
@@ -43,5 +51,11 @@ public class Menu {
     @JoinColumn(name = "categoria_id", nullable = false)
     @NotNull(message = "Debe de tener una categoría")
     private CategoriaMenu categoria;
+
+    // Tabla secundaria automatizada para almacenar la lista de ingredientes simples
+    @ElementCollection
+    @CollectionTable(name = "menu_ingredientes", joinColumns = @JoinColumn(name = "menu_id"))
+    @Column(name = "ingrediente", nullable = false)
+    private List<String> ingredientes;
 
 }

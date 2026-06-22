@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.dondeElPipe.gestorPagos.DTO.PagoDTO;
-import com.dondeElPipe.gestorPagos.DTO.PedidoSimpleDTO;
 import com.dondeElPipe.gestorPagos.model.Pago;
 import com.dondeElPipe.gestorPagos.repository.PagoRepository;
 
@@ -20,111 +19,102 @@ public class PagoService {
     @Autowired
     private PagoRepository repo;
 
-    public Pago registrarPagoYNotificar(Pago pago) {
-        // 1. Instanciamos RestTemplate idéntico a la PPT de tu profesor
-        RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate; 
 
-        // ---------------------------------------------------------------------------------
-        // COMUNICACIÓN REAL 1: Consultar datos auténticos al MS Pedidos (Puerto 8083)
-        // ---------------------------------------------------------------------------------
-        String urlPedidos = "http://localhost:8083/pedidos/buscar/" + pago.getPedidoId();
-        PedidoSimpleDTO pedidoDto;
-        
+    // URLs de comunicación con el ecosistema (Puertos asignados)
+    private final String URL_PEDIDOS = "http://localhost:8083/pedidos/buscar/";
+    private final String URL_CONFIRMAR_PAGO = "http://localhost:8083/pedidos/interno/confirmar-pago/";
+    private final String URL_RESERVAS = "http://localhost:8084/reserva/mesas/actualizar-estado/";
+    private final String URL_COCINA = "http://localhost:8086/cocina/recibir-pedido";
+
+    public Pago procesarPagoEstructurado(Pago pagoSolicitud) {
+        // 1. Consultar el estado real del pedido al gestorPedidos (8083)
+        Map<?, ?> pedidoExterno;
         try {
-            // RestTemplate mapea el JSON automáticamente al objeto. ¡Adiós Warnings de Type Safety!
-            pedidoDto = restTemplate.getForObject(urlPedidos, PedidoSimpleDTO.class);
+            pedidoExterno = restTemplate.getForObject(URL_PEDIDOS + pagoSolicitud.getPedidoId(), Map.class);
         } catch (Exception e) {
-            System.out.println("Error de red o el pedido no existe en el puerto 8083: " + e.getMessage());
-            return null; 
+            throw new RuntimeException("Error: El pedido con ID " + pagoSolicitud.getPedidoId() + " no existe o el microservicio está caído.");
         }
 
-        if (pedidoDto == null) {
-            return null;
+        if (pedidoExterno == null) {
+            throw new IllegalArgumentException("Error: No se encontró información para el pedido solicitado.");
         }
 
-        // Si el microservicio Pedidos confirmó que existe, guardamos el pago localmente en la BD de Pagos
-        pago.setEstado("APROBADO");
-        pago.setFechaPago(LocalDateTime.now());
-        Pago pagoGuardado = repo.save(pago);
+        // 2. REGLA DE NEGOCIO 1: Blindaje contra pagos dobles o infinitos
+        String estadoActual = (String) pedidoExterno.get("estadoPedido");
+        if (estadoActual != null && !estadoActual.equals("ESPERANDO_PAGO")) {
+            throw new IllegalStateException("Rechazado: El pedido con ID " + pagoSolicitud.getPedidoId() + 
+                    " ya no está disponible para pago. Estado actual: " + estadoActual);
+        }
 
-        // Extraemos las variables reales usando los métodos GET limpios del objeto DTO
-        String tipoPedido = pedidoDto.getTipoPedido(); 
-        Integer mesaId = pedidoDto.getMesaId();
+        // 3. REGLA DE NEGOCIO 2: Validación exacta del monto (Ni un peso más, ni un peso menos)
+        Double totalRealPedido = ((Number) pedidoExterno.get("totalPagar")).doubleValue();
+        if (Math.abs(pagoSolicitud.getMonto() - totalRealPedido) > 0.01) {
+            throw new IllegalArgumentException("Rechazado: El monto enviado (" + pagoSolicitud.getMonto() + 
+                    ") no coincide exactamente con el total de la comanda (" + totalRealPedido + ").");
+        }
 
-        // ---------------------------------------------------------------------------------
-        // COMUNICACIÓN REAL 2: Mandar la orden a preparar al MS Cocina (Puerto 8086)
-        // ---------------------------------------------------------------------------------
-        String urlCocina = "http://localhost:8086/cocina/recibir-pedido";
-        Map<String, Object> bodyCocina = new HashMap<>();
-        bodyCocina.put("pedidoId", pago.getPedidoId());
+        // --- SI PASA TODAS LAS REGLAS, SE INYECTAN LOS DATOS AUTOMÁTICOS ---
 
+        // Usamos tus variables reales: "estado" y "fechaPago" (con la fecha/hora actual del servidor)
+        pagoSolicitud.setEstado("APROBADO");
+        pagoSolicitud.setFechaPago(LocalDateTime.now());
+
+        // A. Persistencia financiera en tu tabla "pago"
+        Pago pagoRegistrado = repo.save(pagoSolicitud);
+
+        // B. Notificar al gestorPedidos (8083) para cerrar el ciclo de cobro (Pasará a "PAGADO")
+        restTemplate.put(URL_CONFIRMAR_PAGO + pagoSolicitud.getPedidoId(), null);
+
+        // C. Notificar al gestorReserva (8084) para pasar la mesa a Ocupada (ID Estado: 3)
         try {
-            restTemplate.postForObject(urlCocina, bodyCocina, Map.class);
-            System.out.println("Éxito: Pedido enviado al Gestor de Cocina.");
+            Integer idMesa = (Integer) pedidoExterno.get("idMesa");
+            Map<String, Integer> bodyMesa = new HashMap<>();
+            bodyMesa.put("nuevoEstado", 3); 
+            restTemplate.put(URL_RESERVAS + idMesa, bodyMesa);
         } catch (Exception e) {
-            System.out.println("No se pudo conectar con la Cocina (Puerto 8086): " + e.getMessage());
+            System.out.println(">>> Alerta: No se pudo actualizar el estado de la mesa en Reservas: " + e.getMessage());
         }
 
-        // ---------------------------------------------------------------------------------
-        // COMUNICACIÓN CONDICIONAL REAL (Rutas lógicas del negocio según el tipo de pedido)
-        // ---------------------------------------------------------------------------------
-        
-        // CASO A: Si es consumo LOCAL, se le debe asignar/cambiar estado a la mesa obligatoriamente
-        if ("LOCAL".equals(tipoPedido)) {
-            if (mesaId != null) {
-                String urlReserva = "http://localhost:8084/reserva/mesas/cambiar-estado/" + mesaId;
-                try {
-                    restTemplate.put(urlReserva, null); 
-                    System.out.println("Éxito: Mesa " + mesaId + " cambiada a estado OCUPADA en reservas.");
-                } catch (Exception e) {
-                    System.out.println("No se pudo actualizar la mesa en reservas (Puerto 8084): " + e.getMessage());
-                }
-            } else {
-                System.out.println("Advertencia: El pedido es LOCAL pero no venía con ninguna mesaId asignada.");
-            }
+        // D. Enviar la comanda limpia al monitor del gestorCocina (8086)
+        try {
+         Map<String, Object> bodyCocina = new HashMap<>();
+         bodyCocina.put("pedidoId", pagoSolicitud.getPedidoId()); // Tu controlador lee exactamente "pedidoId"
 
-        // CASO B: Si es para DELIVERY, se genera automáticamente la orden de despacho
-        } else if ("DELIVERY".equals(tipoPedido)) {
-            String urlDelivery = "http://localhost:8087/delivery/crear";
-            Map<String, Object> bodyDelivery = new HashMap<>();
-            bodyDelivery.put("pedidoId", pago.getPedidoId());
-            bodyDelivery.put("direccion", "Dirección registrada por el cliente"); 
-
-            try {
-                restTemplate.postForObject(urlDelivery, bodyDelivery, Map.class);
-                System.out.println("Éxito: Orden de despacho generada en Gestor de Delivery.");
-            } catch (Exception e) {
-                System.out.println("No se pudo conectar con el Delivery (Puerto 8087): " + e.getMessage());
-            }
+            restTemplate.postForObject(URL_COCINA, bodyCocina, Object.class);
+        } catch (Exception e) {
+            System.out.println(">>> Alerta: No se pudo notificar a la Cocina: " + e.getMessage());
         }
-        // CASO C: Si es RETIRO, simplemente no entra a ningún IF (no requiere mesa ni delivery) 
-        // pero ya se envió a cocina en el paso anterior.
 
-        return pagoGuardado;
+        return pagoRegistrado;
     }
 
-    // ========================================================
-    // LOGICA DE LECTURA (Manejo de Optionals y DTOs para consultas)
-    // ========================================================
-    
-    // Retorna Optional directo para la verificación condicional del controlador
+    /**
+     * Busca en la base de datos si existe algún pago aprobado ligado a ese ID de pedido.
+     */
     public Optional<Pago> buscarPagoAprobadoPorPedido(Integer pedidoId) {
-        return repo.findByPedidoIdAndEstado(pedidoId, "APROBADO");
+        // Asumiendo que tienes esta consulta derivada o un findByPedidoId en tu repo
+        // Si no, puedes usar: return repo.findAll().stream().filter(p -> p.getPedidoId().equals(pedidoId) && "APROBADO".equals(p.getEstado())).findFirst();
+        return repo.findAll().stream()
+                .filter(p -> p.getPedidoId().equals(pedidoId) && "APROBADO".equals(p.getEstado()))
+                .findFirst();
     }
 
-    // Consulta limpia estructurada en DTO para reportes o auditorías de caja
+    /**
+     * Transforma la entidad de pago en un comprobante DTO limpio.
+     */
     public PagoDTO obtenerDetallePagoDTO(Integer id) {
-        Pago pago = repo.findById(id).orElse(null);
-        if (pago == null) return null;
-
-        return new PagoDTO(
-            pago.getId(),
-            pago.getPedidoId(),
-            pago.getMonto(),
-            pago.getMetodoPago(),
-            pago.getEstado(),
-            pago.getFechaPago()
-        );
+        return repo.findById(id).map(p -> {
+            PagoDTO dto = new PagoDTO();
+            dto.setId(p.getId());
+            dto.setPedidoId(p.getPedidoId());
+            dto.setMonto(p.getMonto());
+            dto.setMetodoPago(p.getMetodoPago());
+            dto.setEstado(p.getEstado());
+            dto.setFechaPago(p.getFechaPago());
+            return dto;
+        }).orElse(null);
     }
 
 }

@@ -1,18 +1,14 @@
 package com.dondeElPipe.gestorPagos.DTO;
 
-import java.util.List;
 
 import lombok.Data;
 
 @Data
 public class PedidoSimpleDTO {
 
-    private Integer idPedido;
-    private String tipoPedido;     // Aquí llegará "LOCAL", "RETIRO" o "DELIVERY"
-    private String estadoPedido;   // Aquí llegará "PENDIENTE", "PAGADO", etc.
-    private Integer usuarioId;
-    private Integer mesaId;        // ID de la mesa si es LOCAL
-    private Double totalPedido;
-    private List<DetallePedidoDTO> detalles;
+    private Integer id;
+    private String estadoPedido; 
+    private Integer idMesa; // Importante para actualizar la mesa después
+    private Double totalPagar;
 
 }

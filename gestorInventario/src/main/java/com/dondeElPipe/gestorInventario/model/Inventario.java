@@ -24,24 +24,13 @@ public class Inventario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // Nombre del insumo (ej: "Carne de Vacuno", "Coca Cola 350ml", "Papas fritas congeladas")
-    @NotBlank(message = "El nombre del insumo no puede estar vacío")
-    @Column(nullable = false, length = 99, unique = true)
-    private String nombreInsumo;
+    @NotBlank(message = "El nombre del ingrediente es obligatorio")
+    @Column(name = "nombre_ingrediente", unique = true, nullable = false, length = 50)
+    private String nombreIngrediente; // Ej: "Vacuno", "Pan", "Tomate"
 
-    // Cantidad actual disponible en el restaurante
-    @NotNull(message = "Debe registrar un stock inicial")
+    @NotNull(message = "El stock es obligatorio")
     @Min(value = 0, message = "El stock no puede ser negativo")
     @Column(nullable = false)
-    private Double stockActual; // Usamos Double por si manejas kilos flotantes (ej: 1.5 kg)
-
-    // Unidad de medida (ej: "KG", "LTS", "UNIDADES")
-    @NotBlank(message = "Debe especificar la unidad de medida")
-    @Column(nullable = false, length = 20)
-    private String unidadMedida;
-
-    @NotNull(message = "Debe ingresar el ID de la categoría")
-    @Column(name = "categoria_id", nullable = false) 
-    private Integer categoria;
+    private Integer stock;
 
 }

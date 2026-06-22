@@ -14,7 +14,6 @@ import com.dondeElPipe.gestorMenu.repository.MenuRepository;
 @Service
 public class MenuService {
 
-    //inyeción del repository
     private final MenuRepository repo;
     private final CategoriaMenuRepository catRepo;
 
@@ -23,58 +22,43 @@ public class MenuService {
         this.catRepo = catRepo;
     }
 
-    
-
-    //--+----+----+----+----+----+----+----+----+----+----+--
-    //--+----+----+----+--Crud básico--+----+----+----+----+--
-    //--+----+----+----+----+----+----+----+----+----+----+--
-
-    //ver todos los platos
     public List<Menu> listar(){
         return repo.findAll();
     }
     
-    //crear un plato
     public Menu crearPlato(Menu menu) {
-        // 1. Validar que la categoría seleccionada por ID exista
         if (menu.getCategoria() == null || menu.getCategoria().getId() == null) {
             return null; 
         }
 
-        // Verificamos en el repositorio de categorías si el ID realmente existe
         if (!catRepo.existsById(menu.getCategoria().getId())) {
             return null;
         }
 
-        // 2. Limpiar espacios intermedios y validar duplicado de nombre del plato
         String nombreLimpio = menu.getNombrePlato().trim().replaceAll("\\s+", " ");
         if (repo.existsByNombrePlatoIgnoreCase(nombreLimpio)) {
-            return null; // El controlador se encargará de responder con el código 400 Bad Request
+            return null; 
         }
 
         Menu nuevoPlato = new Menu();
         nuevoPlato.setNombrePlato(nombreLimpio);
+        nuevoPlato.setDescripcion(menu.getDescripcion()); // <- NUEVO
         nuevoPlato.setPrecio(menu.getPrecio());
         nuevoPlato.setCategoria(menu.getCategoria());
+        nuevoPlato.setIngredientes(menu.getIngredientes()); // <- NUEVO
 
         return repo.save(nuevoPlato);
     }
 
-    //eliminar un plato por el id
     public void eliminarPlato(Integer id){
         repo.deleteById(id);
     }
-    //modificar un plato
+
     public Menu actualizarMenu(Integer id, Menu menu){
         menu.setId(id);
         return repo.save(menu);
     }
 
-    //--+----+----+----+----+----+----+----+----+----+----+--
-    //--+----+----+--Funciones especiales--+----+----+----+--
-    //--+----+----+----+----+----+----+----+----+----+----+--
-
-    //buscar por id
     public Optional<Menu> buscarId(Integer id){
         return repo.findById(id);
     }
@@ -95,9 +79,12 @@ public class MenuService {
 
     private MenuDTO convertirADto(Menu menu) {
         MenuDTO dto = new MenuDTO();
+        dto.setId(menu.getId()); // <- NUEVO
         dto.setNombrePlato(menu.getNombrePlato());
+        dto.setDescripcion(menu.getDescripcion()); // <- NUEVO
         dto.setPrecio(menu.getPrecio());
-        // Evitamos NullPointerException si por alguna razón el plato no tiene categoría asignada
+        dto.setIngredientes(menu.getIngredientes()); // <- NUEVO
+        
         if (menu.getCategoria() != null) {
             dto.setNombreCategoria(menu.getCategoria().getNombre());
         }

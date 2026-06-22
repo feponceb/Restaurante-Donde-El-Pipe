@@ -1,10 +1,9 @@
-package com.dondeElPipe.gestorPedidos.model;
+package com.dondeElPipe.gestorPedidos.DTO;
 
 import lombok.Data;
 
 @Data
-public class Plato {
-
+public class MenuExternoDTO {
     private Integer id;
     private String nombre;
     private Double precio;

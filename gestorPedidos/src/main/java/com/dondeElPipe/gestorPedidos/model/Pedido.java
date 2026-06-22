@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -29,24 +32,24 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "tipo_pedido_id")
-    @NotNull(message = "El tipo de pedido es obligatorio")
-    private TipoPedido tipoPedido;
+    @NotNull(message = "Debe asignar una mesa al pedido")
+    @Column(name = "id_mesa", nullable = false)
+    private Integer idMesa;
 
-    @ManyToOne
-    @JoinColumn(name = "estado_pedido_id")
-    private EstadoPedido estadoPedido;
+    @NotNull(message = "Debe asignar un garzón al pedido")
+    @Column(name = "id_garzon", nullable = false)
+    private Integer idGarzon;
 
-    @NotNull(message = "El ID del usuario/garzón responsable es obligatorio.")
-    private Integer usuarioId;
+    @Column(name = "estado_pedido", nullable = false, length = 30)
+    private String estadoPedido; // "PENDIENTE_PAGO", "PAGADO", "ENTREGADO", etc.
 
-    private Integer mesaId; // Obligatorio solo si tipoPedido == Local
+    @Column(name = "total_pagar", nullable = false)
+    private Double totalPagar;
 
-    private LocalDateTime fechaCreacion;
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "pedido_id")
-    private List<DetallePedido> detalles;
+    // Guardamos los IDs de los platillos del menú tal como el ejemplo de las PPTs
+    @ElementCollection
+    @CollectionTable(name = "pedido_platillos", joinColumns = @JoinColumn(name = "pedido_id"))
+    @Column(name = "id_platillo")
+    private List<Integer> platillosIds;
 
 }
