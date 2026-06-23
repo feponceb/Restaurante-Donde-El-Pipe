@@ -19,6 +19,9 @@ import com.dondeElPipe.gestorUsuario.DTO.UsuarioDTO;
 import com.dondeElPipe.gestorUsuario.model.Usuario;
 import com.dondeElPipe.gestorUsuario.service.UsuarioService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -28,17 +31,34 @@ public class UsuarioController {
     @Autowired
     private UsuarioService service;
 
-    //buscar todos los usuarios
+    // GET: listar todos los usuarios
+    @Operation(
+        summary = "Listar usuarios",
+        description = "Obtiene una lista con todos los usuarios registrados en el sistema en formato DTO"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista obtenida correctamente"),
+        @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/listar")
     public ResponseEntity<List<UsuarioDTO>> listar() {
         List<UsuarioDTO> usuarios = service.listar();
         return ResponseEntity.ok(usuarios);
     }
 
-    //crear un usuario Response
+    // POST: crear un usuario Response
+    @Operation(
+        summary = "Crear usuario",
+        description = "Registra un nuevo usuario en el sistema validando las reglas de negocio"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Usuario creado correctamente"),
+        @ApiResponse(responseCode = "400", description = "Datos invalidos (RUT o Email ya existen, o formato incorrecto)"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/nuevo-usuario")
     public ResponseEntity<?> nuevoUsuario(@Valid @RequestBody Usuario usuario) {
-        // El servicio ahora retorna un UsuarioDTO (sin contraseña)
         UsuarioDTO nuevo = service.crearUsuario(usuario);
 
         if (nuevo == null) {
@@ -49,7 +69,16 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
 
-    //eliminar un usuario por id
+    // DELETE: eliminar un usuario por id
+    @Operation(
+        summary = "Eliminar usuario",
+        description = "Remueve un usuario del sistema mediante su identificador único ID"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Usuario eliminado correctamente"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @DeleteMapping("/eliminar-usuario/{id}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable Integer id) {
         Optional<UsuarioDTO> usuario = service.buscarId(id);
@@ -63,9 +92,19 @@ public class UsuarioController {
         }
     }
 
-    //actualizar un usuario
+    // PUT: actualizar un usuario
+    @Operation(
+        summary = "Actualizar usuario",
+        description = "Modifica los datos de un usuario existente utilizando su ID"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario actualizado correctamente"),
+        @ApiResponse(responseCode = "400", description = "Datos invalidos o error en la actualización"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PutMapping("/modificar-usuario/{id}")
-    public ResponseEntity<?> actualizarUsuario(@Valid @PathVariable Integer id, @RequestBody Usuario usuario) {
+    public ResponseEntity<?> actualizarUsuario(@PathVariable Integer id, @Valid @RequestBody Usuario usuario) {
         Optional<UsuarioDTO> existente = service.buscarId(id);
 
         if (existente.isEmpty()) {
@@ -84,6 +123,16 @@ public class UsuarioController {
                 .body("Usuario modificado correctamente");
     }
 
+    // GET: buscar por ID
+    @Operation(
+        summary = "Buscar usuario por ID",
+        description = "Obtiene los datos de un usuario específico usando su ID"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario encontrado correctamente"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/buscar/{id}")
     public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable Integer id) {
         Optional<UsuarioDTO> usuarioOpt = service.buscarId(id); 

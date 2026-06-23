@@ -14,7 +14,7 @@ import com.dondeElPipe.gestorInventario.DTO.ErrorDTO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice
+//@RestControllerAdvice
 public class ManejoErrores {
 
     // 1. CAPTURA ERRORES DE VALIDACIÓN (@Valid en los campos del Model)

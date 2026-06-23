@@ -14,7 +14,7 @@ import com.dondeElPipe.gestorUsuario.DTO.ErrorDTO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice
+//@RestControllerAdvice
 public class ManejoErrores {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

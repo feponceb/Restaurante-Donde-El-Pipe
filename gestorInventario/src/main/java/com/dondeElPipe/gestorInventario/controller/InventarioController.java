@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dondeElPipe.gestorInventario.model.Inventario;
 import com.dondeElPipe.gestorInventario.service.InventarioService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -30,8 +33,15 @@ public class InventarioController {
     
     /**
      * Ver el estado actual de toda la bodega
-     * GET: http://localhost:8081/inventario/listar
      */
+    @Operation(
+        summary = "Listar estado de la bodega",
+        description = "Obtiene la lista completa con todos los insumos e ingredientes registrados y sus respectivos niveles de stock"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Listado de inventario obtenido con éxito"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/listar")
     public ResponseEntity<List<Inventario>> listarTodo() {
         return ResponseEntity.ok(service.obtenerTodo());
@@ -39,10 +49,16 @@ public class InventarioController {
 
     /**
      * AGREGAR / REABASTECER PRODUCTO
-     * POST: http://localhost:8081/inventario/agregar
-     * Body JSON: { "nombreIngrediente": "Pan", "stock": 50 }
-     * Nota: Si "Pan" ya existía con 200, pasará a tener 250 de forma automática.
      */
+    @Operation(
+        summary = "Agregar o reabastecer producto",
+        description = "Registra un nuevo ingrediente o incrementa de forma acumulativa el stock de un insumo existente en base a su nombre"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Insumo registrado o reabastecido exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos de entrada incorrectos o inválidos"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/agregar")
     public ResponseEntity<Inventario> agregarOReabastecer(@Valid @RequestBody Inventario item) {
         Inventario guardado = service.agregarOReabastecer(item);
@@ -51,9 +67,16 @@ public class InventarioController {
 
     /**
      * MODIFICAR DATOS DE UN PRODUCTO POR ID
-     * PUT: http://localhost:8081/inventario/modificar/3
-     * Body JSON: { "nombreIngrediente": "Palta Hass", "stock": 15 }
      */
+    @Operation(
+        summary = "Modificar un producto por ID",
+        description = "Actualiza las propiedades y sobrescribe el stock de un ingrediente específico utilizando su identificador único"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Producto modificado correctamente"),
+        @ApiResponse(responseCode = "404", description = "No se encontró ningún ingrediente asociado al ID provisto"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PutMapping("/modificar/{id}")
     public ResponseEntity<?> modificar(@PathVariable Integer id, @Valid @RequestBody Inventario item) {
         try {
@@ -66,8 +89,16 @@ public class InventarioController {
 
     /**
      * Endpoint interno para que Cocina rebaje insumos.
-     * PUT: http://localhost:8081/inventario/descontar
      */
+    @Operation(
+        summary = "Descontar stock de insumos (Interno)",
+        description = "Endpoint síncrono diseñado para que el microservicio de Cocina rebaje las existencias de una lista de ingredientes tras la preparación de un pedido"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Stock actualizado de manera exitosa en la bodega"),
+        @ApiResponse(responseCode = "400", description = "Fallo al procesar el descuento (Existencias insuficientes o ingredientes no válidos)"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PutMapping("/descontar")
     public ResponseEntity<String> descontar(@RequestBody List<String> ingredientes) {
         try {

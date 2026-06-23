@@ -18,6 +18,9 @@ import com.dondeElPipe.gestorMenu.DTO.MenuDTO;
 import com.dondeElPipe.gestorMenu.model.Menu;
 import com.dondeElPipe.gestorMenu.service.MenuService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -34,59 +37,92 @@ public class MenuController {
     //--+----+----+----+----+----+----+----+----+----+----+--
     //--+----+----+----+--Metodos Crud--+----+----+----+----+--
     //--+----+----+----+----+----+----+----+----+----+----+--
-    //buscar todo
+    
+    // buscar todo
+    @Operation(
+        summary = "Listar todos los platillos",
+        description = "Obtiene una lista con todos los platos registrados en el menú con su modelo de datos completo"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de platos obtenida correctamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/todo")
     public ResponseEntity<List<Menu>> listar() {
         List<Menu> platos = service.listar();
-        return ResponseEntity.ok(platos); // Equivale a status(HttpStatus.OK).body(platos)
+        return ResponseEntity.ok(platos);
     }
 
     // buscar todo en formato DTO
+    @Operation(
+        summary = "Listar menú completo (DTO)",
+        description = "Obtiene la lista de platillos en formato simplificado optimizado para la vista"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista en formato DTO obtenida correctamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/todoDTO")
     public ResponseEntity<List<MenuDTO>> listarDTO() {
-        // El service internamente ya se encarga de transformar las entidades a DTOs
         List<MenuDTO> menu = service.listarTodoElMenu();
         return ResponseEntity.ok(menu);
     }
     
-    
-    //crear un plato Response
-    //DETALLE
-    //no crear mismos nombres de platos
+    // crear un plato Response
+    @Operation(
+        summary = "Registrar un nuevo plato",
+        description = "Agrega un nuevo platillo al catálogo validando que no exista un nombre idéntico duplicado"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Platillo creado exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos (El nombre del plato ya existe en el sistema)"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/nuevo-plato")
     public ResponseEntity<?> nuevoPlato(@Valid @RequestBody Menu menu){
-
         Menu nuevo = service.crearPlato(menu);
 
-        // Si el servicio detectó un duplicado y devolvió null
         if (nuevo == null) {
-            // Respondemos con código 400 Bad Request y un mensaje de error claro
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                 .body("Error: El nombre del plato '" + menu.getNombrePlato() + "' ya existe.");
         }
 
-        // Si se creó correctamente, respondemos con código 201 Created y el objeto completo (con su ID)
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
     
-
-    //eliminar un plato por id
+    // eliminar un plato por id
+    @Operation(
+        summary = "Eliminar platillo por ID",
+        description = "Remueve permanentemente un platillo del menú a través de su ID único"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Platillo eliminado correctamente (Sin cuerpo de respuesta)"),
+        @ApiResponse(responseCode = "404", description = "El platillo con el ID especificado no fue encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @DeleteMapping("/eliminar-plato/{id}")
     public ResponseEntity<?> eliminarPlato(@PathVariable Integer id) {
         Optional<Menu> menu = service.buscarId(id);
 
         if (menu.isPresent()) {
             service.eliminarPlato(id);
-            //codigo 200
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();                                   
         } else {
-            //Codigo error 404
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                     .body("El plato " + id + " no fue encontrado");
         }
     }
     
-    //actualizar un plato
+    // actualizar un plato
+    @Operation(
+        summary = "Actualizar platillo por ID",
+        description = "Modifica los componentes o características de un plato existente mediante su ID"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Platillo actualizado correctamente"),
+        @ApiResponse(responseCode = "404", description = "El platillo solicitado para modificar no existe"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PutMapping("/modificar-plato/{id}")
     public ResponseEntity<?> actualizarPlato(@Valid @PathVariable Integer id, @RequestBody Menu menu){
         Optional<Menu> existente = service.buscarId(id);
@@ -97,10 +133,20 @@ public class MenuController {
                                     .body("Plato modificado correctamente");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                    .body("El plato " +id+ " no fue encontrado");
+                                    .body("El plato " + id + " no fue encontrado");
         }
     }
 
+    // buscar por id
+    @Operation(
+        summary = "Buscar platillo por ID",
+        description = "Recupera la información completa de un platillo específico usando su identificador"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Platillo localizado con éxito"),
+        @ApiResponse(responseCode = "404", description = "Platillo no encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/buscar/{id}")
     public ResponseEntity<?> obtenerPlatoPorId(@PathVariable Integer id) {
         Optional<Menu> plato = service.buscarId(id);

@@ -12,7 +12,7 @@ import com.dondeElPipe.gestorReserva.DTO.ErrorDTO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice
+//@RestControllerAdvice
 public class ManejadorErrores {
 
     // 1. Captura errores de validación (@NotNull, @Min, @Max)

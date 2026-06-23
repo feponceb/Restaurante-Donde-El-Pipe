@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dondeElPipe.gestorMenu.model.CategoriaMenu;
 import com.dondeElPipe.gestorMenu.service.CategoriaService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -27,12 +30,29 @@ public class CategoriaController {
     private CategoriaService service;
 
     // Endpoint: Listar todas
+    @Operation(
+        summary = "Listar todas las categorías",
+        description = "Obtiene una lista de todas las clasificaciones de menú disponibles (Ej: Entradas, Fondos, Bebestibles)"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de categorías obtenida correctamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/todo")
     public ResponseEntity<List<CategoriaMenu>> obtenerCategorias() {
         return ResponseEntity.ok(service.listarTodo());
     }
 
     // Endpoint: Crear nueva categoría
+    @Operation(
+        summary = "Crear nueva categoría",
+        description = "Registra una clasificación de menú validando que no exista un nombre idéntico duplicado"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Categoría creada con éxito"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos (La categoría ya existe en el sistema)"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/nueva")
     public ResponseEntity<?> crearCategoria(@Valid @RequestBody CategoriaMenu categoria) {
         CategoriaMenu nueva = service.crear(categoria);
@@ -44,6 +64,15 @@ public class CategoriaController {
     }
 
     // Endpoint: Eliminar categoría (Forzando 204 No Content)
+    @Operation(
+        summary = "Eliminar categoría por ID",
+        description = "Remueve permanentemente una categoría de menú mediante su identificador único"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Categoría eliminada con éxito (Sin cuerpo de respuesta)"),
+        @ApiResponse(responseCode = "404", description = "La categoría con el ID especificado no existe"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<?> eliminarCategoria(@PathVariable Integer id) {
         Optional<CategoriaMenu> encontrada = service.buscarPorId(id);

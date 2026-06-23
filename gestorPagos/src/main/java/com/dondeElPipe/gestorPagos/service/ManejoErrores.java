@@ -14,7 +14,7 @@ import com.dondeElPipe.gestorPagos.DTO.ErrorDTO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice
+//@RestControllerAdvice
 public class ManejoErrores {
 
     // 1. Atrapa errores de Bean Validation (@NotNull, @DecimalMin, @NotBlank)

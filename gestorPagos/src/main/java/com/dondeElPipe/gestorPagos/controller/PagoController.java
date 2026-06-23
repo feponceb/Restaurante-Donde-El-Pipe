@@ -16,6 +16,9 @@ import com.dondeElPipe.gestorPagos.DTO.PagoDTO;
 import com.dondeElPipe.gestorPagos.model.Pago;
 import com.dondeElPipe.gestorPagos.service.PagoService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -27,29 +30,41 @@ public class PagoController {
 
     /**
      * Endpoint para procesar un nuevo pago.
-     * Este método inicia la cadena de comunicación con Pedidos, Reservas y Cocina.
-     * POST: http://localhost:8085/pagos/procesar
      */
+    @Operation(
+        summary = "Procesar un nuevo pago",
+        description = "Registra un pago, valida el monto de la orden e inicia la cadena de comunicación síncrona con Pedidos, Reservas y Cocina"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Pago procesado y aprobado con éxito"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos o inconsistencia en las reglas de negocio (monto incorrecto o pedido ya liquidado)"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor o falla en la comunicación con el microservicio de Pedidos")
+    })
     @PostMapping("/procesar")
     public ResponseEntity<?> procesarPago(@Valid @RequestBody Pago pago) {
         try {
-            // Sincronizado con el nombre real del método en tu PagoService estructurado
             Pago nuevoPago = service.procesarPagoEstructurado(pago);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevoPago);
             
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // Captura los candados de seguridad (Monto incorrecto o ya pagado) y responde un 400 limpio
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            // Captura errores de caídas de microservicios o fallos de base de datos
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
     /**
      * Endpoint para verificar si un pedido ya tiene un pago aprobado.
-     * GET: http://localhost:8085/pagos/verificar-pedido/{pedidoId}
      */
+    @Operation(
+        summary = "Verificar estado de pago por ID de Pedido",
+        description = "Consulta de forma directa si un ID de pedido específico cuenta con una transacción aprobada y guardada en el sistema"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "El pedido consultado ya se encuentra pagado y aprobado"),
+        @ApiResponse(responseCode = "404", description = "No se registran transacciones aprobadas para el ID de pedido provisto"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/verificar-pedido/{pedidoId}")
     public ResponseEntity<?> verificarPagoPedido(@PathVariable Integer pedidoId) {
         Optional<Pago> pagoOpt = service.buscarPagoAprobadoPorPedido(pedidoId);
@@ -64,8 +79,16 @@ public class PagoController {
 
     /**
      * Endpoint para obtener un comprobante simplificado en formato DTO.
-     * GET: http://localhost:8085/pagos/comprobante/{id}
      */
+    @Operation(
+        summary = "Obtener comprobante de pago (DTO)",
+        description = "Recupera los detalles mínimos y esenciales de una transacción en formato simplificado (DTO) para la emisión del ticket o boleta"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Detalles del comprobante DTO obtenidos correctamente"),
+        @ApiResponse(responseCode = "404", description = "No se encontró ningún registro de pago asociado al ID enviado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/comprobante/{id}")
     public ResponseEntity<?> obtenerComprobante(@PathVariable Integer id) {
         PagoDTO dto = service.obtenerDetallePagoDTO(id);

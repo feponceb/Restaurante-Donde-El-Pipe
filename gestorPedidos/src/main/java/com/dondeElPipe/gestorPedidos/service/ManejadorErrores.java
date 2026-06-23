@@ -12,7 +12,7 @@ import com.dondeElPipe.gestorPedidos.DTO.ErrorDTO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice
+//@RestControllerAdvice
 public class ManejadorErrores {
 
     // 1. Captura errores de validación de los campos (@Valid, @NotNull, etc.)
