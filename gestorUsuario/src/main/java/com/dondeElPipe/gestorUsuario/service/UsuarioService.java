@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.dondeElPipe.gestorUsuario.DTO.UsuarioDTO;
@@ -21,6 +22,16 @@ public class UsuarioService {
     @Autowired
     private RolRepository rolRepo;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository repo,
+        PasswordEncoder passwordEncoder
+    ) {
+        this.repo = repo;
+        this.passwordEncoder = passwordEncoder;
+    }
+
     //--+----+----+----+----+----+----+----+----+----+----+
     //--+----+----+----+--Crud básico--+----+----+----+----+----
     //--+----+----+----+----+----+----+----+----+----+----+
@@ -35,13 +46,16 @@ public class UsuarioService {
 
     //crear un usuario
     public UsuarioDTO crearUsuario(Usuario usuario) {
-        if (usuario.getRut() == null || usuario.getEmail() == null || usuario.getRol() == null) {
+        // 1. Validaciones iniciales de campos obligatorios (incluyendo que traiga password)
+        if (usuario.getRut() == null || usuario.getEmail() == null || 
+            usuario.getRol() == null || usuario.getPassword() == null) {
             return null;
         }
         
         String rutLimpio = usuario.getRut().trim().replace(".", "").replace("-", "");
         String emailLimpio = usuario.getEmail().trim().toLowerCase();
         
+        // Validaciones de negocio y duplicados
         if (!validarRutMatematico(rutLimpio) || 
             !rolRepo.existsById(usuario.getRol()) || 
             repo.existsByRutIgnoreCase(usuario.getRut().trim()) || 
@@ -49,14 +63,21 @@ public class UsuarioService {
             return null; 
         }
 
-        // Si pasa todos los filtros, persistimos el objeto sanitizado
+        // 2. Persistimos los datos sanitizados
         usuario.setRut(usuario.getRut().trim());
         usuario.setEmail(emailLimpio);
 
-        // Guardamos en la base de datos
+        // 3.  ENCRIPTACIÓN DE LA CLAVE (Según la documentación adjunta)
+        // Extraemos el password en texto plano enviado desde Postman, lo codificamos con BCrypt
+        // y lo reasignamos al objeto antes de hacer el save.
+        String passwordPlano = usuario.getPassword();
+        String passwordEncriptado = passwordEncoder.encode(passwordPlano);
+        usuario.setPassword(passwordEncriptado);
+
+        // 4. Guardamos en la base de datos de manera segura
         Usuario usuarioGuardado = repo.save(usuario);
         
-        // Retornamos el DTO mapeado (sin el password)
+        // Retornamos el DTO mapeado (el cual ya filtra el password automáticamente)
         return convertirADto(usuarioGuardado);
     }
 
