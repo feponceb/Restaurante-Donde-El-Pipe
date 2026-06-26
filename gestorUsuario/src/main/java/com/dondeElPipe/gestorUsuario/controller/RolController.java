@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/usuario/roles")
+@RequestMapping("/usuarios/roles")
 public class RolController {
 
     @Autowired

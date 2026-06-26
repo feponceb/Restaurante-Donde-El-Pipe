@@ -1,0 +1,66 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+
+            - id: ruta-gestorusuario
+              uri: lb://GESTORUSUARIO
+              predicates:
+                - Path=/usuarios,/usuarios/**
+
+            - id: ruta-gestorcocina
+              uri: lb://GESTORCOCINA
+              predicates:
+                - Path=/cocina,/cocina/**
+
+            - id: ruta-gestorinventario
+              uri: lb://GESTORINVENTARIO
+              predicates:
+                - Path=/inventario,/inventario/**
+
+            - id: ruta-gestormenu
+              uri: lb://GESTORMENU
+              predicates:
+                - Path=/menu,/menu/**
+
+            - id: ruta-gestorpagos
+              uri: lb://GESTORPAGOS
+              predicates:
+                - Path=/pagos,/pagos/**
+
+            - id: ruta-gestorpedidos
+              uri: lb://GESTORPEDIDOS
+              predicates:
+                - Path=/pedidos,/pedidos/**
+
+            - id: ruta-gestorreserva
+              uri: lb://GESTORRESERVA
+              predicates:
+                - Path=/reserva,/reserva/**
+
+              
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    hostname: 127.0.0.1
+    instance-id: 127.0.0.1:${spring.application.name}:${server.port}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
